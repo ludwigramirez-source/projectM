@@ -1,8 +1,13 @@
 using System.Text.Json.Serialization;
 using FluentValidation;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
+using ProjectM.Api.Features.Auth;
+using ProjectM.Api.Features.Users;
+using ProjectM.Api.Infrastructure;
 using ProjectM.Api.Infrastructure.Errors;
 using ProjectM.Api.Infrastructure.Persistence;
+using ProjectM.Api.Infrastructure.Seed;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,15 +34,24 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.ConfigureHttpJsonOptions(o =>
 {
     o.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
-    o.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.Never;
 });
 
 builder.Services.AddDbContext<AppDbContext>(o =>
     o.UseSqlServer(config.GetConnectionString("Default"),
         sql => sql.EnableRetryOnFailure(5)));
 
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddAuthServices(config);
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 builder.Services.AddOpenApi();
+
+builder.Services.Configure<ForwardedHeadersOptions>(o =>
+{
+    // La API solo es accesible a través de nginx dentro de la red de Docker.
+    o.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    o.KnownNetworks.Clear();
+    o.KnownProxies.Clear();
+});
 
 var allowedOrigins = (config["Cors:AllowedOrigins"] ?? "")
     .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
@@ -50,6 +64,7 @@ builder.Services.AddCors(o => o.AddDefaultPolicy(p => p
 // ---------- Pipeline ----------
 var app = builder.Build();
 
+app.UseForwardedHeaders();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
@@ -60,11 +75,15 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors();
+app.UseAuthentication();
+app.UseRateLimiter();
+app.UseAuthorization();
 
-if (config.GetValue<bool>("Database:MigrateOnStartup"))
+await using (var scope = app.Services.CreateAsyncScope())
 {
-    using var scope = app.Services.CreateScope();
-    await scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.MigrateAsync();
+    if (config.GetValue<bool>("Database:MigrateOnStartup"))
+        await scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.MigrateAsync();
+    await scope.ServiceProvider.GetRequiredService<IdentitySeeder>().SeedAsync();
 }
 
 app.MapGet("/health", async (AppDbContext db, CancellationToken ct) =>
@@ -72,6 +91,10 @@ app.MapGet("/health", async (AppDbContext db, CancellationToken ct) =>
         ? Results.Ok(new { status = "ok" })
         : Results.Json(new { status = "db_unavailable" }, statusCode: 503))
     .AllowAnonymous();
+
+var api = app.MapGroup("/api/v1").RequireAuthorization();
+api.MapAuthEndpoints();
+api.MapUserEndpoints();
 
 app.Run();
 
