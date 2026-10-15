@@ -18,7 +18,7 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     private readonly string _dbName = $"ProjectM_Test_{Guid.NewGuid():N}";
     private static string BaseConnection =>
         Environment.GetEnvironmentVariable("TEST_SQL_CONNECTION")
-        ?? "Server=localhost,1433;User Id=sa;Password=Your_password123;TrustServerCertificate=True";
+        ?? throw new InvalidOperationException("Define TEST_SQL_CONNECTION (usa scripts/test.ps1, que la toma de .env).");
 
     public string ConnectionString => $"{BaseConnection};Database={_dbName}";
 

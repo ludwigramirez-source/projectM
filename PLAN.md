@@ -123,7 +123,7 @@ Entidades clave (campos principales):
 | Cierre | `POST projects/{id}/closure/start` · `GET projects/{id}/closure` · `PUT projects/{id}/closure` (borrador del acta + lecciones) · `PUT projects/{id}/closure/checklist/{itemId}` · `POST projects/{id}/closure/cancel` · `POST projects/{id}/close {force, justification}` · `POST projects/{id}/reopen {reason}` (Admin) |
 | Plantillas | `GET/POST/PUT/DELETE project-templates` · `GET/PUT closure-checklist-template` (Admin) |
 | Listas | `GET/POST projects/{id}/lists` · `PUT/DELETE lists/{id}` · `POST projects/{id}/lists/reorder` |
-| Tareas | `GET tasks?projectId&listId&status&assigneeId&priority&tagId&dueFrom&dueTo&overdue&q&parentId&sort&page` · `POST tasks` · `GET/PATCH/DELETE tasks/{id}` · `PATCH tasks/{id}/status` · `PATCH tasks/{id}/move {listId,status,beforeId,afterId}` · `GET tasks/{id}/subtasks` |
+| Tareas | `GET tasks?projectId&listId&status&assigneeId&priority&tagId&dueFrom&dueTo&overdue&q&parentId&sort&page` · `POST tasks` · `GET/PATCH/DELETE tasks/{id}` · `PATCH tasks/{id}/status` · `PATCH tasks/{id}/move {listId,status,beforeId,afterId}` · `PATCH tasks/{id}/dates` · `GET tasks/{id}/subtasks` _(implementado: `PUT tasks/{id}` para campos básicos con rowVersion)_ |
 | Etiquetas | `GET/POST tags` · `PUT/DELETE tags/{id}` · `PUT tasks/{id}/tags` |
 | Campos pers. | `GET/POST projects/{id}/custom-fields` · `PUT/DELETE custom-fields/{id}` · `PUT tasks/{id}/custom-fields/{fieldId}` |
 | Adjuntos | `POST tasks/{id}/attachments` (multipart) · `GET tasks/{id}/attachments` · `GET attachments/{id}/download` · `DELETE attachments/{id}` |

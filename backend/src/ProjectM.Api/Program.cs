@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using ProjectM.Api.Features.Auth;
 using ProjectM.Api.Features.Closure;
 using ProjectM.Api.Features.Collaboration;
+using ProjectM.Api.Features.Dashboard;
 using ProjectM.Api.Features.Projects;
 using ProjectM.Api.Features.Spaces;
 using ProjectM.Api.Features.Tasks;
@@ -59,6 +60,7 @@ builder.Services.AddScoped<ProjectGuard>();
 builder.Services.AddScoped<ProjectQueries>();
 builder.Services.AddScoped<ProjectLifecycle>();
 builder.Services.AddScoped<ReferenceDataSeeder>();
+builder.Services.AddScoped<DemoSeeder>();
 builder.Services.AddScoped<TaskQueries>();
 builder.Services.Configure<StorageOptions>(config.GetSection(StorageOptions.Section));
 builder.Services.AddSingleton<IFileStorage, LocalFileStorage>();
@@ -111,6 +113,7 @@ await using (var scope = app.Services.CreateAsyncScope())
         await scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.MigrateAsync();
     await scope.ServiceProvider.GetRequiredService<IdentitySeeder>().SeedAsync();
     await scope.ServiceProvider.GetRequiredService<ReferenceDataSeeder>().SeedAsync();
+    await scope.ServiceProvider.GetRequiredService<DemoSeeder>().SeedAsync();
 }
 
 app.MapGet("/health", async (AppDbContext db, CancellationToken ct) =>
@@ -131,6 +134,7 @@ api.MapTaskEndpoints();
 api.MapTaskSupportEndpoints();
 api.MapCalendarEndpoints();
 api.MapCollaborationEndpoints();
+api.MapDashboardEndpoints();
 
 app.MapHub<NotificationsHub>("/hubs/notifications");
 

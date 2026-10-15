@@ -1,7 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { MainLayout, RequireRole } from '@/components/layout/MainLayout'
 import { LoginPage } from '@/features/auth/LoginPage'
-import { HomePage } from '@/features/home/HomePage'
+import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { UsersPage } from '@/features/admin/UsersPage'
 import { TemplatesPage } from '@/features/admin/TemplatesPage'
 import { ClosureChecklistPage } from '@/features/admin/ClosureChecklistPage'
@@ -16,7 +16,7 @@ export const router = createBrowserRouter([
   {
     element: <MainLayout />,
     children: [
-      { index: true, element: <HomePage /> },
+      { index: true, element: <DashboardPage /> },
       { path: 'my-tasks', element: <MyTasksPage /> },
       { path: 'projects', element: <ProjectsPage /> },
       {
@@ -60,7 +60,7 @@ export const router = createBrowserRouter([
           </RequireRole>
         ),
       },
-      { path: '*', element: <HomePage /> },
+      { path: '*', element: <DashboardPage /> },
     ],
   },
 ])

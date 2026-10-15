@@ -32,6 +32,7 @@ services:
       Seed__DemoPassword: ${SEED_DEMO_PASSWORD:-}
       Storage__AttachmentsPath: /data/attachments
       App__TimeZone: ${APP_TIMEZONE:-UTC}
+      Auth__SecureCookies: ${AUTH_SECURE_COOKIES:-true}
     volumes:
       - attachments:/data/attachments
     depends_on:
