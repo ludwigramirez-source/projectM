@@ -8,6 +8,7 @@ using ProjectM.Api.Infrastructure.Errors;
 using ProjectM.Api.Infrastructure.Pagination;
 using ProjectM.Api.Infrastructure.Persistence;
 using ProjectM.Api.Infrastructure.Validation;
+using ProjectM.Domain.Collaboration;
 using ProjectM.Domain.Tasks;
 
 namespace ProjectM.Api.Features.Tasks;
@@ -35,7 +36,7 @@ public static class TaskEndpoints
         t.Subtasks.Count(s => !s.IsDeleted),
         t.Subtasks.Count(s => !s.IsDeleted && s.Status == TaskItemStatus.Completada),
         t.Attachments.Count(a => !a.IsDeleted),
-        0,
+        t.Comments.Count(c => !c.IsDeleted),
         t.Status != TaskItemStatus.Completada && t.DueDate < today,
         t.Tags.Select(tt => new TagDto(tt.Tag.Id, tt.Tag.Name, tt.Tag.Color)).ToList());
 
@@ -160,6 +161,7 @@ public static class TaskEndpoints
             if (value is not null) task.CustomFieldValues.Add(value);
         }
 
+        task.Raise(new TaskCreated(task.Id, task.ProjectId, task.Title));
         db.Tasks.Add(task);
         await db.SaveChangesAsync(ct);
         return Results.Created($"/api/v1/tasks/{task.Id}", await queries.DetailAsync(task.Id, true, ct));
@@ -226,10 +228,13 @@ public static class TaskEndpoints
 
     private static async Task<IResult> Delete(Guid id, AppDbContext db, ProjectGuard guard, AppClock clock, CancellationToken ct)
     {
-        await guard.EnsureForTaskAsync(id, ProjectPermission.EditTasks, ct);
+        var ctx = await guard.EnsureForTaskAsync(id, ProjectPermission.EditTasks, ct);
         var now = clock.Now;
+        var title = await db.Tasks.Where(t => t.Id == id).Select(t => t.Title).FirstAsync(ct);
         await db.Tasks.Where(t => t.Id == id || t.ParentTaskId == id)
             .ExecuteUpdateAsync(s => s.SetProperty(t => t.IsDeleted, true).SetProperty(t => t.UpdatedAt, now), ct);
+        db.AddEvent(new TaskDeleted(id, ctx.ProjectId, title));
+        await db.SaveChangesAsync(ct);
         return Results.NoContent();
     }
 

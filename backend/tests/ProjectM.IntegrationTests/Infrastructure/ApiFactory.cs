@@ -36,6 +36,7 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("Seed:Demo", "false");
         builder.UseSetting("Auth:SecureCookies", "false");
         builder.UseSetting("Auth:LoginPermitLimitPerMinute", LoginPermitLimit.ToString());
+        builder.UseSetting("Notifications:DueDateJob", "false");
         builder.UseSetting("Storage:AttachmentsPath", Path.Combine(Path.GetTempPath(), _dbName));
     }
 

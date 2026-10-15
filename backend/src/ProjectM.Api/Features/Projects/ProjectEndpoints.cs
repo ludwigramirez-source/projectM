@@ -7,6 +7,7 @@ using ProjectM.Api.Infrastructure.Errors;
 using ProjectM.Api.Infrastructure.Pagination;
 using ProjectM.Api.Infrastructure.Persistence;
 using ProjectM.Api.Infrastructure.Validation;
+using ProjectM.Domain.Collaboration;
 using ProjectM.Domain.Projects;
 using ProjectM.Domain.Tasks;
 using ProjectM.Domain.Users;
@@ -151,6 +152,8 @@ public static class ProjectEndpoints
         project.Members.AddRange(validMembers.Select(uid => new ProjectMember { ProjectId = project.Id, UserId = uid, AddedAt = now }));
 
         await ApplyTemplateAsync(db, project, req.TemplateId, user.Id, now, ct);
+        project.Raise(new ProjectCreated(project.Id, project.Name));
+        foreach (var uid in validMembers.Where(uid => uid != user.Id)) db.AddEvent(new MemberAdded(project.Id, uid));
         if (req.ActivateNow) project.Activate(clock.Today);
 
         db.Projects.Add(project);
@@ -256,6 +259,7 @@ public static class ProjectEndpoints
         if (!await db.ProjectMembers.AnyAsync(m => m.ProjectId == id && m.UserId == req.UserId, ct))
         {
             db.ProjectMembers.Add(new ProjectMember { ProjectId = id, UserId = req.UserId, AddedAt = clock.Now });
+            db.AddEvent(new MemberAdded(id, req.UserId));
             await db.SaveChangesAsync(ct);
         }
         return Results.Ok(await queries.MembersAsync(id, ct));

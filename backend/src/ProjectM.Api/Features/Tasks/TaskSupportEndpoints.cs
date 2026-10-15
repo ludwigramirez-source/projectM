@@ -266,7 +266,7 @@ public static class TaskSupportEndpoints
     private static async Task<IResult> Upload(Guid taskId, IFormFile? file, ProjectGuard guard, AppDbContext db, IFileStorage storage,
         IOptions<StorageOptions> options, ICurrentUser user, AppClock clock, CancellationToken ct)
     {
-        await guard.EnsureForTaskAsync(taskId, ProjectPermission.EditTasks, ct);
+        var ctx = await guard.EnsureForTaskAsync(taskId, ProjectPermission.EditTasks, ct);
         if (file is null || file.Length == 0) throw AppException.Validation("file", "Selecciona un archivo.");
         if (file.Length > options.Value.MaxFileSizeBytes)
             throw AppException.Validation("file", $"El archivo supera el máximo de {options.Value.MaxFileSizeMb} MB.");
@@ -292,6 +292,7 @@ public static class TaskSupportEndpoints
             UploadedById = user.Id,
             CreatedAt = clock.Now
         };
+        attachment.Raise(new Domain.Collaboration.AttachmentAdded(taskId, ctx.ProjectId, fileName));
         db.Attachments.Add(attachment);
         await db.SaveChangesAsync(ct);
         return Results.Created($"/api/v1/attachments/{attachment.Id}/download",

@@ -21,13 +21,16 @@ import { TeamTab } from './TeamTab'
 import { ClosureTab } from './ClosureTab'
 import { SettingsTab } from './SettingsTab'
 import { ProjectTasks } from '@/features/tasks/ProjectTasks'
+import { ActivityTab } from '@/features/collab/ActivityTab'
+import { useProjectRealtime } from '@/app/realtime'
 
-export type ProjectTab = 'resumen' | 'tareas' | 'seguimiento' | 'equipo' | 'cierre' | 'ajustes'
+export type ProjectTab = 'resumen' | 'tareas' | 'seguimiento' | 'equipo' | 'actividad' | 'cierre' | 'ajustes'
 
 export function ProjectPage() {
   const { projectId = '', tab = 'resumen' } = useParams()
   const navigate = useNavigate()
   const { data: project, isLoading, error } = useProject(projectId)
+  useProjectRealtime(project?.id)
 
   if (isLoading) return <PageLoader />
   if (error || !project)
@@ -39,6 +42,7 @@ export function ProjectPage() {
     { value: 'tareas', label: 'Tareas' },
     { value: 'seguimiento', label: 'Riesgos y bloqueos' },
     { value: 'equipo', label: `Equipo (${project.members.length})` },
+    { value: 'actividad', label: 'Actividad' },
     { value: 'cierre', label: project.status === 'Cerrado' ? 'Acta de cierre' : 'Cierre' },
   ]
   if (perms.canManage) items.push({ value: 'ajustes', label: 'Ajustes' })
@@ -67,6 +71,7 @@ export function ProjectPage() {
         {tab === 'tareas' && <ProjectTasks project={project} />}
         {tab === 'seguimiento' && <TrackingTab project={project} />}
         {tab === 'equipo' && <TeamTab project={project} />}
+        {tab === 'actividad' && <ActivityTab project={project} />}
         {tab === 'cierre' && <ClosureTab project={project} />}
         {tab === 'ajustes' && perms.canManage && <SettingsTab project={project} />}
       </div>

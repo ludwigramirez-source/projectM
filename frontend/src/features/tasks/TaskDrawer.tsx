@@ -19,6 +19,7 @@ import { useMilestones, useProject } from '@/api/projects'
 import { ApiError, errorMessage } from '@/api/client'
 import { Avatar, Badge, Button, Drawer, Input, Modal, PageLoader, Select, StatusBadge, Textarea, useToast } from '@/components/ui'
 import { cn } from '@/lib/cn'
+import { TaskConversation } from '@/features/collab/TaskConversation'
 import { fmtDateTime } from '@/lib/format'
 import { PRIORITIES, TASK_STATUSES, priorityMeta, taskStatusMeta, type TaskStatus, type Tone } from '@/lib/status'
 
@@ -203,6 +204,8 @@ function TaskBody({ task }: { task: TaskDetail }) {
 
       {!task.parentTaskId && <Subtasks task={task} can={can} onError={onError} />}
       <Attachments task={task} can={can} onError={onError} />
+
+      {project && <TaskConversation taskId={task.id} projectId={task.projectId} members={project.members} canComment={can} />}
 
       <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-xs text-fg-muted">
         <span>

@@ -5,6 +5,7 @@ import { RouterProvider } from 'react-router-dom'
 import './index.css'
 import { ToastProvider } from '@/components/ui'
 import { AuthProvider } from '@/app/auth'
+import { RealtimeProvider } from '@/app/realtime'
 import { router } from '@/app/router'
 import { ApiError } from '@/api/client'
 
@@ -23,7 +24,9 @@ createRoot(document.getElementById('root')!).render(
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
         <AuthProvider>
-          <RouterProvider router={router} />
+          <RealtimeProvider>
+            <RouterProvider router={router} />
+          </RealtimeProvider>
         </AuthProvider>
       </ToastProvider>
     </QueryClientProvider>

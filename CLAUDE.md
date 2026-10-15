@@ -54,4 +54,7 @@ docker compose up -d --build      # web en http://localhost:8080, API en 127.0.0
 - Tareas: `PUT /tasks/{id}` reemplaza los campos básicos (con `rowVersion`); estado y movimiento van por `PATCH .../status` y `PATCH .../move` (orden fraccional con rebalanceo).
 - Campos personalizados obligatorios: no bloquean el alta rápida; se exigen al completar la tarea (`CAMPOS_REQUERIDOS`) y no pueden vaciarse.
 - El detalle de tarea se abre desde cualquier pantalla con `?task=<id>` (`TaskDrawer` montado en `MainLayout`).
+- Eventos de dominio: las entidades hacen `Raise(...)` (o `db.AddEvent(...)` tras un `ExecuteUpdate`); `AppDbContext.SaveChangesAsync` los pasa a `DomainEventDispatcher`, que escribe `ActivityLog` y `Notification` en la misma transacción y, tras confirmar, entrega por `INotificationChannel` (v1: SignalR) y avisa `projectChanged` al grupo del proyecto. Correo/WhatsApp = otra implementación de `INotificationChannel`.
+- Ediciones de tareas (título, fechas, prioridad, lista, hito, descripción) se detectan en el change tracker y generan `TaskUpdated` automáticamente.
+- Hub `/hubs/notifications`: grupos `user:{id}` y `project:{id}` (`JoinProject` valida permiso de lectura). `DueDateNotifier` (hosted service, cada hora) avisa "vence mañana" y "vencida" sin duplicar; se desactiva con `Notifications:DueDateJob=false`.
 - git: un commit por fase.

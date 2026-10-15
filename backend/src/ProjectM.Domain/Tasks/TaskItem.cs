@@ -67,6 +67,7 @@ public class TaskItem : Entity
     public List<TaskTag> Tags { get; set; } = [];
     public List<CustomFieldValue> CustomFieldValues { get; set; } = [];
     public List<Attachment> Attachments { get; set; } = [];
+    public List<Collaboration.Comment> Comments { get; set; } = [];
 
     public bool IsOpen => Status != TaskItemStatus.Completada;
     public bool IsOverdue(DateOnly today) => IsOpen && DueDate is not null && DueDate < today;
