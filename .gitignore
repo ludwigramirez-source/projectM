@@ -1,0 +1,30 @@
+# Secrets / env
+.env
+*.env.local
+appsettings.*.local.json
+
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+TestResults/
+*.trx
+
+# Node
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Data
+data/
+attachments/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
