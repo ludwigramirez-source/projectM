@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
-import { ChevronDown, ClipboardCheck, FolderKanban, LayoutDashboard, LayoutTemplate, LogOut, Palette, ShieldCheck, Users } from 'lucide-react'
+import { CheckSquare, ChevronDown, ClipboardCheck, FolderKanban, LayoutDashboard, LayoutTemplate, LogOut, Palette, ShieldCheck, Users } from 'lucide-react'
 import { NavItem, NavSection } from './Nav'
 import { SpaceTree } from './SpaceTree'
 import { TaskDrawer } from '@/features/tasks/TaskDrawer'
@@ -17,6 +17,9 @@ function Sidebar() {
         <div className="space-y-0.5">
           <NavItem to="/" end icon={<LayoutDashboard className="size-4" />}>
             Inicio
+          </NavItem>
+          <NavItem to="/my-tasks" icon={<CheckSquare className="size-4" />}>
+            Mis tareas
           </NavItem>
           <NavItem to="/projects" end icon={<FolderKanban className="size-4" />}>
             Proyectos

@@ -120,6 +120,7 @@ api.MapClosureEndpoints();
 api.MapTemplateEndpoints();
 api.MapTaskEndpoints();
 api.MapTaskSupportEndpoints();
+api.MapCalendarEndpoints();
 
 app.Run();
 

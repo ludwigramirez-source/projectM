@@ -9,6 +9,7 @@ import { DesignSystemPage } from '@/features/design/DesignSystemPage'
 import { ProjectsPage } from '@/features/projects/ProjectsPage'
 import { NewProjectPage } from '@/features/projects/NewProjectPage'
 import { ProjectPage } from '@/features/projects/ProjectPage'
+import { MyTasksPage } from '@/features/tasks/MyTasksPage'
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
@@ -16,6 +17,7 @@ export const router = createBrowserRouter([
     element: <MainLayout />,
     children: [
       { index: true, element: <HomePage /> },
+      { path: 'my-tasks', element: <MyTasksPage /> },
       { path: 'projects', element: <ProjectsPage /> },
       {
         path: 'projects/new',

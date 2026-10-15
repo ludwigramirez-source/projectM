@@ -275,3 +275,37 @@ public class TaskTests(ApiFactory factory)
         await (await s.Miembro.GetAsync($"/api/v1/tasks/{id}")).ShouldBeAsync(200);
     }
 }
+
+[Collection(ApiCollection.Name)]
+public class CalendarTests(ApiFactory factory)
+{
+    [Fact]
+    public async Task Calendario_devuelve_tareas_que_cruzan_el_rango_e_hitos()
+    {
+        var s = await ProjectScenario.CreateAsync(factory); // plantilla: tareas desde 2026-10-01
+        await (await s.Gestor.PostAsJsonAsync(s.Url("/milestones"), new { name = "Entrega parcial", dueDate = "2026-10-20" })).ShouldBeAsync(201);
+
+        var cal = await (await s.Miembro.GetAsync($"/api/v1/calendar?from=2026-10-01&to=2026-10-31&projectId={s.ProjectId}")).JsonAsync();
+        var titles = cal.GetProperty("tasks").EnumerateArray().Select(t => t.GetProperty("title").GetString()).ToList();
+        titles.Should().Contain("Reunión de arranque con el cliente")
+            .And.Contain("Desarrollo de entregables", "empieza en octubre aunque vence en noviembre");
+        cal.GetProperty("milestones").GetArrayLength().Should().Be(1);
+
+        await (await s.Miembro.GetAsync("/api/v1/calendar?from=2026-01-01&to=2026-12-31")).ShouldBeAsync(400, "VALIDACION");
+        await (await s.Ajeno.GetAsync($"/api/v1/calendar?from=2026-10-01&to=2026-10-31&projectId={s.ProjectId}")).ShouldBeAsync(404);
+    }
+
+    [Fact]
+    public async Task Reprogramar_desde_calendario_valida_rango()
+    {
+        var s = await ProjectScenario.CreateAsync(factory);
+        var list = await (await s.Miembro.GetAsync($"/api/v1/tasks?projectId={s.ProjectId}")).JsonAsync();
+        var id = list.GetProperty("items")[0].GetProperty("id").GetGuid();
+
+        var moved = await (await s.Miembro.PatchAsJsonAsync($"/api/v1/tasks/{id}/dates", new { startDate = "2026-10-05", dueDate = "2026-10-07" })).JsonAsync();
+        moved.GetProperty("dueDate").GetString().Should().Be("2026-10-07");
+        await (await s.Miembro.PatchAsJsonAsync($"/api/v1/tasks/{id}/dates", new { startDate = "2026-10-09", dueDate = "2026-10-07" }))
+            .ShouldBeAsync(400, "VALIDACION");
+        await (await s.Observador.PatchAsJsonAsync($"/api/v1/tasks/{id}/dates", new { dueDate = "2026-10-08" })).ShouldBeAsync(403);
+    }
+}
