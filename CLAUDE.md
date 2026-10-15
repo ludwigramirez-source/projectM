@@ -15,7 +15,8 @@ Gestor de proyectos estilo ClickUp (MVP, un solo tenant, UI en español). Plan c
 powershell -File scripts/dotnet.ps1 build
 powershell -File scripts/dotnet.ps1 test tests/ProjectM.UnitTests
 powershell -File scripts/dotnet.ps1 ef migrations add <Nombre> --project src/ProjectM.Api --output-dir Infrastructure/Persistence/Migrations
-docker compose --profile test run --rm --build tests        # unit + integración contra SQL Server del compose
+powershell -File scripts/test.ps1                           # unit + integración (contenedor SDK en la red del compose)
+powershell -File scripts/test.ps1 --filter ProjectClosureTests
 
 # Frontend (Node local)
 cd frontend && npm run dev        # http://localhost:5173 (proxy a la API en localhost:5010)
@@ -41,6 +42,12 @@ docker compose up -d --build      # web en http://localhost:8080, API en 127.0.0
 - Lint: oxlint (plantilla de Vite 8) + Prettier.
 
 ## Decisiones
+- `ProjectM.Domain` referencia solo `Microsoft.Extensions.Identity.Stores` (para `AppUser : IdentityUser<Guid>` con navegaciones); el resto del dominio no tiene dependencias.
+- Autorización por proyecto centralizada en `ProjectGuard` (`Infrastructure/Authorization`): 404 si no puede ver, 409 `PROYECTO_CERRADO` si escribe en cerrado, 403 si no tiene el permiso. Reglas puras en `ProjectRules` (probadas en `PermissionMatrixTests`).
+- "Hoy" sale de `AppClock` con la zona `App:TimeZone` (`APP_TIMEZONE`).
+- `Project.Code` (PRJ-0001) es columna calculada sobre la secuencia `ProjectNumbers`.
+- Fechas de calendario `DateOnly`; FKs a usuarios con `Restrict`; Project→Lists→Tasks en cascada, resto `NoAction` (rutas múltiples en SQL Server).
+- Entidades con `Id` generado en cliente (`Guid.NewGuid()`, `ValueGeneratedNever`).
 - Build/test del backend 100 % en Docker (decisión del usuario, sin SDK local).
 - Adjuntos en disco (`/data/attachments`, volumen Docker) detrás de `IFileStorage`.
 - Refresh token rotativo en cookie HttpOnly `SameSite=Strict` con path `/api/auth`; access token solo en memoria del SPA.

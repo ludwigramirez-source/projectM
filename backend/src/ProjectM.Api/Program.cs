@@ -3,8 +3,13 @@ using FluentValidation;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using ProjectM.Api.Features.Auth;
+using ProjectM.Api.Features.Closure;
+using ProjectM.Api.Features.Projects;
+using ProjectM.Api.Features.Spaces;
+using ProjectM.Api.Features.Templates;
 using ProjectM.Api.Features.Users;
 using ProjectM.Api.Infrastructure;
+using ProjectM.Api.Infrastructure.Authorization;
 using ProjectM.Api.Infrastructure.Errors;
 using ProjectM.Api.Infrastructure.Persistence;
 using ProjectM.Api.Infrastructure.Seed;
@@ -42,6 +47,12 @@ builder.Services.AddDbContext<AppDbContext>(o =>
 
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddAuthServices(config);
+builder.Services.AddSingleton<AppClock>();
+builder.Services.AddSingleton<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, ProjectAuthorizationHandler>();
+builder.Services.AddScoped<ProjectGuard>();
+builder.Services.AddScoped<ProjectQueries>();
+builder.Services.AddScoped<ProjectLifecycle>();
+builder.Services.AddScoped<ReferenceDataSeeder>();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 builder.Services.AddOpenApi();
 
@@ -84,6 +95,7 @@ await using (var scope = app.Services.CreateAsyncScope())
     if (config.GetValue<bool>("Database:MigrateOnStartup"))
         await scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.MigrateAsync();
     await scope.ServiceProvider.GetRequiredService<IdentitySeeder>().SeedAsync();
+    await scope.ServiceProvider.GetRequiredService<ReferenceDataSeeder>().SeedAsync();
 }
 
 app.MapGet("/health", async (AppDbContext db, CancellationToken ct) =>
@@ -95,6 +107,11 @@ app.MapGet("/health", async (AppDbContext db, CancellationToken ct) =>
 var api = app.MapGroup("/api/v1").RequireAuthorization();
 api.MapAuthEndpoints();
 api.MapUserEndpoints();
+api.MapSpaceEndpoints();
+api.MapProjectEndpoints();
+api.MapTrackingEndpoints();
+api.MapClosureEndpoints();
+api.MapTemplateEndpoints();
 
 app.Run();
 
