@@ -50,5 +50,8 @@ docker compose up -d --build      # web en http://localhost:8080, API en 127.0.0
 - Entidades con `Id` generado en cliente (`Guid.NewGuid()`, `ValueGeneratedNever`).
 - Build/test del backend 100 % en Docker (decisión del usuario, sin SDK local).
 - Adjuntos en disco (`/data/attachments`, volumen Docker) detrás de `IFileStorage`.
-- Refresh token rotativo en cookie HttpOnly `SameSite=Strict` con path `/api/auth`; access token solo en memoria del SPA.
+- Refresh token rotativo en cookie HttpOnly `SameSite=Strict` con path `/api/v1/auth`; access token solo en memoria del SPA.
+- Tareas: `PUT /tasks/{id}` reemplaza los campos básicos (con `rowVersion`); estado y movimiento van por `PATCH .../status` y `PATCH .../move` (orden fraccional con rebalanceo).
+- Campos personalizados obligatorios: no bloquean el alta rápida; se exigen al completar la tarea (`CAMPOS_REQUERIDOS`) y no pueden vaciarse.
+- El detalle de tarea se abre desde cualquier pantalla con `?task=<id>` (`TaskDrawer` montado en `MainLayout`).
 - git: un commit por fase.

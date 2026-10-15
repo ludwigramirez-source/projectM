@@ -38,13 +38,16 @@ public class CustomFieldDefinition : Entity
     public bool IsRequired { get; set; }
     public int Position { get; set; }
 
-    /// <summary>Valida y normaliza un valor recibido como texto. Devuelve null si el valor está vacío.</summary>
-    public CustomFieldValue? Parse(Guid taskId, string? raw)
+    /// <summary>
+    /// Valida y normaliza un valor recibido como texto. Devuelve null si el valor está vacío.
+    /// Un campo obligatorio no puede vaciarse (<paramref name="enforceRequired"/>) y se exige al completar la tarea.
+    /// </summary>
+    public CustomFieldValue? Parse(Guid taskId, string? raw, bool enforceRequired = true)
     {
         var value = raw?.Trim();
         if (string.IsNullOrEmpty(value))
         {
-            if (IsRequired)
+            if (IsRequired && enforceRequired)
                 throw new DomainException("CAMPO_REQUERIDO", $"El campo «{Name}» es obligatorio.", DomainErrorKind.Validation);
             return null;
         }
@@ -90,7 +93,7 @@ public class CustomFieldValue
     /// <summary>Representación canónica en texto (para la API).</summary>
     public string? AsString() =>
         TextValue
-        ?? NumberValue?.ToString(CultureInfo.InvariantCulture)
+        ?? NumberValue?.ToString("0.############", CultureInfo.InvariantCulture)
         ?? DateValue?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 }
 

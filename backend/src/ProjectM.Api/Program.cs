@@ -6,6 +6,7 @@ using ProjectM.Api.Features.Auth;
 using ProjectM.Api.Features.Closure;
 using ProjectM.Api.Features.Projects;
 using ProjectM.Api.Features.Spaces;
+using ProjectM.Api.Features.Tasks;
 using ProjectM.Api.Features.Templates;
 using ProjectM.Api.Features.Users;
 using ProjectM.Api.Infrastructure;
@@ -13,6 +14,7 @@ using ProjectM.Api.Infrastructure.Authorization;
 using ProjectM.Api.Infrastructure.Errors;
 using ProjectM.Api.Infrastructure.Persistence;
 using ProjectM.Api.Infrastructure.Seed;
+using ProjectM.Api.Infrastructure.Storage;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -53,6 +55,10 @@ builder.Services.AddScoped<ProjectGuard>();
 builder.Services.AddScoped<ProjectQueries>();
 builder.Services.AddScoped<ProjectLifecycle>();
 builder.Services.AddScoped<ReferenceDataSeeder>();
+builder.Services.AddScoped<TaskQueries>();
+builder.Services.Configure<StorageOptions>(config.GetSection(StorageOptions.Section));
+builder.Services.AddSingleton<IFileStorage, LocalFileStorage>();
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(o => o.MultipartBodyLengthLimit = 25 * 1024 * 1024);
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 builder.Services.AddOpenApi();
 
@@ -112,6 +118,8 @@ api.MapProjectEndpoints();
 api.MapTrackingEndpoints();
 api.MapClosureEndpoints();
 api.MapTemplateEndpoints();
+api.MapTaskEndpoints();
+api.MapTaskSupportEndpoints();
 
 app.Run();
 

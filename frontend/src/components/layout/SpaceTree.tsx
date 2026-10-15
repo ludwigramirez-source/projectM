@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, NavLink, useMatch } from 'react-router-dom'
+import { Link, NavLink, useMatch, useSearchParams } from 'react-router-dom'
 import { ChevronRight, FolderKanban, List, Plus, Lock } from 'lucide-react'
 import { useTree, useSaveSpace } from '@/api/projects'
 import { useAuth } from '@/app/auth'
@@ -22,6 +22,8 @@ export function SpaceTree() {
   const { data } = useTree()
   const { hasRole } = useAuth()
   const projectId = useMatch('/projects/:projectId/*')?.params.projectId
+  const [search] = useSearchParams()
+  const activeList = search.get('list')
   const [open, setOpen] = useState<Record<string, boolean>>({})
   const [creating, setCreating] = useState(false)
   const canCreate = hasRole('Admin', 'Gestor')
@@ -83,11 +85,11 @@ export function SpaceTree() {
                           {p.lists.map((l) => (
                             <NavLink
                               key={l.id}
-                              to={`/projects/${p.id}/lists/${l.id}`}
-                              className={({ isActive }) =>
+                              to={`/projects/${p.id}/tareas?list=${l.id}`}
+                              className={() =>
                                 cn(
                                   'flex items-center gap-2 rounded-md px-2 py-1 text-xs',
-                                  isActive ? 'bg-sidebar-active text-sidebar-fg' : 'text-sidebar-fg-muted hover:text-sidebar-fg',
+                                  activeList === l.id ? 'bg-sidebar-active text-sidebar-fg' : 'text-sidebar-fg-muted hover:text-sidebar-fg',
                                 )
                               }
                             >

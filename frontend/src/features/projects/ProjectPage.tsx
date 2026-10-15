@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Lock, Pause, Play, RotateCcw } from 'lucide-react'
 import { useProject, useProjectTransition, useClosureMutations, type ProjectDetail } from '@/api/projects'
@@ -20,11 +20,11 @@ import { TrackingTab } from './TrackingTab'
 import { TeamTab } from './TeamTab'
 import { ClosureTab } from './ClosureTab'
 import { SettingsTab } from './SettingsTab'
+import { ProjectTasks } from '@/features/tasks/ProjectTasks'
 
 export type ProjectTab = 'resumen' | 'tareas' | 'seguimiento' | 'equipo' | 'cierre' | 'ajustes'
 
-/** Contenido de la pestaña "Tareas"; las vistas de tareas lo reemplazan desde el router. */
-export function ProjectPage({ tasksView }: { tasksView?: (p: ProjectDetail) => ReactNode }) {
+export function ProjectPage() {
   const { projectId = '', tab = 'resumen' } = useParams()
   const navigate = useNavigate()
   const { data: project, isLoading, error } = useProject(projectId)
@@ -64,7 +64,7 @@ export function ProjectPage({ tasksView }: { tasksView?: (p: ProjectDetail) => R
       {project.status === 'Cerrado' && <ClosedBanner project={project} />}
       <div className="flex-1">
         {tab === 'resumen' && <OverviewTab project={project} />}
-        {tab === 'tareas' && (tasksView ? tasksView(project) : <EmptyState title="Selecciona una lista" />)}
+        {tab === 'tareas' && <ProjectTasks project={project} />}
         {tab === 'seguimiento' && <TrackingTab project={project} />}
         {tab === 'equipo' && <TeamTab project={project} />}
         {tab === 'cierre' && <ClosureTab project={project} />}

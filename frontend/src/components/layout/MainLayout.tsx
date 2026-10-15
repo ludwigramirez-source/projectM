@@ -3,6 +3,7 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { ChevronDown, ClipboardCheck, FolderKanban, LayoutDashboard, LayoutTemplate, LogOut, Palette, ShieldCheck, Users } from 'lucide-react'
 import { NavItem, NavSection } from './Nav'
 import { SpaceTree } from './SpaceTree'
+import { TaskDrawer } from '@/features/tasks/TaskDrawer'
 import { AppShell, Logo } from './AppShell'
 import { Avatar, PageLoader } from '@/components/ui'
 import { roleLabel, useAuth } from '@/app/auth'
@@ -104,6 +105,7 @@ export function MainLayout() {
       }
     >
       <Outlet />
+      <TaskDrawer />
     </AppShell>
   )
 }
