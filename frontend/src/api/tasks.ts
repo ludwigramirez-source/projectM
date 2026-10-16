@@ -206,7 +206,7 @@ export function useTaskMutations(projectId?: string) {
       mutationFn: (b: { id: string; file: File }) => {
         const form = new FormData()
         form.append('file', b.file)
-        return api<Attachment>(`/tasks/${b.id}/attachments`, { method: 'POST', body: form })
+        return api<Attachment>(`/tasks/${b.id}/attachments`, { method: 'POST', body: form, direct: true })
       },
       onSuccess: (_, b) => invalidateTasks(qc, projectId, b.id),
     }),
@@ -293,7 +293,7 @@ export function useListMutations(projectId: string) {
 
 /** Descarga un adjunto con el token (los enlaces directos no llevan Authorization). */
 export async function downloadAttachment(a: Attachment) {
-  const go = () => fetch(buildUrl(`/attachments/${a.id}/download`), { headers: { Authorization: `Bearer ${getAccessToken()}` } })
+  const go = () => fetch(buildUrl(`/attachments/${a.id}/download`, undefined, true), { headers: { Authorization: `Bearer ${getAccessToken()}` } })
   let res = await go()
   if (res.status === 401 && (await refreshSession())) res = await go()
   if (!res.ok) throw new Error('No se pudo descargar el archivo.')

@@ -49,7 +49,7 @@ builder.Services.ConfigureHttpJsonOptions(o =>
 });
 
 builder.Services.AddDbContext<AppDbContext>(o =>
-    o.UseSqlServer(config.GetConnectionString("Default"),
+    o.UseNpgsql(config.GetConnectionString("Default"),
         sql => sql.EnableRetryOnFailure(5)));
 
 builder.Services.AddSingleton(TimeProvider.System);
@@ -63,7 +63,10 @@ builder.Services.AddScoped<ReferenceDataSeeder>();
 builder.Services.AddScoped<DemoSeeder>();
 builder.Services.AddScoped<TaskQueries>();
 builder.Services.Configure<StorageOptions>(config.GetSection(StorageOptions.Section));
-builder.Services.AddSingleton<IFileStorage, LocalFileStorage>();
+if (string.Equals(config["Storage:Provider"], "S3", StringComparison.OrdinalIgnoreCase))
+    builder.Services.AddSingleton<IFileStorage, S3FileStorage>();
+else
+    builder.Services.AddSingleton<IFileStorage, LocalFileStorage>();
 builder.Services.AddScoped<DomainEventDispatcher>();
 builder.Services.AddScoped<NotificationSender>();
 builder.Services.AddSingleton<INotificationChannel, SignalRNotificationChannel>();
@@ -75,8 +78,11 @@ builder.Services.AddOpenApi();
 
 builder.Services.Configure<ForwardedHeadersOptions>(o =>
 {
-    // La API solo es accesible a través de nginx dentro de la red de Docker.
+    // La API solo se expone detrás de proxies: nginx en Docker (1 salto) o Vercel → Render (2 saltos).
+    // Proxy:ForwardLimit indica cuántos proxies confiables hay, para obtener la IP real del cliente
+    // (la usa el rate limiting del login).
     o.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    o.ForwardLimit = config.GetValue("Proxy:ForwardLimit", 1);
     o.KnownNetworks.Clear();
     o.KnownProxies.Clear();
 });

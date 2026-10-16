@@ -61,7 +61,8 @@ public class TaskItem : Entity
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
     public bool IsDeleted { get; set; }
-    public byte[] RowVersion { get; set; } = [];
+    /// <summary>Token de concurrencia optimista (columna de sistema xmin en PostgreSQL).</summary>
+    public uint RowVersion { get; set; }
 
     public List<TaskItem> Subtasks { get; set; } = [];
     public List<TaskTag> Tags { get; set; } = [];

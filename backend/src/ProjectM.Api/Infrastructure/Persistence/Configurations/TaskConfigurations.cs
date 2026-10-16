@@ -22,11 +22,11 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
     {
         e.ToTable("Tasks");
         e.Property(x => x.Title).HasMaxLength(200).IsRequired();
-        e.Property(x => x.Description).HasColumnType("nvarchar(max)");
+        e.Property(x => x.Description).HasColumnType("text");
         e.Property(x => x.BlockedReason).HasMaxLength(500);
         e.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
         e.Property(x => x.Priority).HasConversion<string>().HasMaxLength(20);
-        e.Property(x => x.RowVersion).IsRowVersion();
+        e.Property(x => x.RowVersion).IsRowVersion(); // xmin
         e.HasQueryFilter(x => !x.IsDeleted);
 
         // Project → Lists → Tasks hace cascada; el resto NoAction para evitar rutas múltiples en SQL Server.
@@ -42,7 +42,7 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
         e.HasIndex(x => new { x.AssigneeId, x.Status, x.DueDate });
         e.HasIndex(x => x.ParentTaskId);
         e.HasIndex(x => x.MilestoneId);
-        e.HasIndex(x => x.DueDate).HasFilter("[CompletedAt] IS NULL AND [IsDeleted] = 0");
+        e.HasIndex(x => x.DueDate).HasFilter("\"CompletedAt\" IS NULL AND NOT \"IsDeleted\"");
     }
 }
 
@@ -76,7 +76,7 @@ public class CustomFieldDefinitionConfiguration : IEntityTypeConfiguration<Custo
         e.ToTable("CustomFieldDefinitions");
         e.Property(x => x.Name).HasMaxLength(100).IsRequired();
         e.Property(x => x.Type).HasConversion<string>().HasMaxLength(20);
-        e.PrimitiveCollection(x => x.Options).HasColumnType("nvarchar(max)");
+        e.PrimitiveCollection(x => x.Options).HasColumnType("text[]");
         e.HasOne<Project>().WithMany().HasForeignKey(x => x.ProjectId).OnDelete(DeleteBehavior.Cascade);
         e.HasIndex(x => new { x.ProjectId, x.Position });
     }

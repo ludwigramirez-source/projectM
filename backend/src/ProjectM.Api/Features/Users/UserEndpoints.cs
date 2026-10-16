@@ -74,8 +74,8 @@ public static class UserEndpoints
         var users = db.Users.AsNoTracking();
         if (!string.IsNullOrWhiteSpace(q))
         {
-            var term = q.Trim();
-            users = users.Where(u => u.FullName.Contains(term) || u.Email!.Contains(term));
+            var term = Search.Contains(q);
+            users = users.Where(u => EF.Functions.ILike(u.FullName, term) || EF.Functions.ILike(u.Email!, term));
         }
         if (active is not null) users = users.Where(u => u.IsActive == active);
         if (!string.IsNullOrWhiteSpace(role))
@@ -92,8 +92,8 @@ public static class UserEndpoints
         var users = db.Users.AsNoTracking().Where(u => u.IsActive);
         if (!string.IsNullOrWhiteSpace(q))
         {
-            var term = q.Trim();
-            users = users.Where(u => u.FullName.Contains(term) || u.Email!.Contains(term));
+            var term = Search.Contains(q);
+            users = users.Where(u => EF.Functions.ILike(u.FullName, term) || EF.Functions.ILike(u.Email!, term));
         }
         var items = await users.OrderBy(u => u.FullName).Take(50)
             .Select(u => new UserLookupDto(u.Id, u.FullName, u.Email!)).ToListAsync(ct);

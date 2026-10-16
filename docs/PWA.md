@@ -14,7 +14,7 @@ Para una herramienta interna de un solo equipo, la PWA cubre el caso de uso prin
 
 ## Requisitos para instalar
 
-1. **HTTPS obligatorio** fuera de `localhost`. Los navegadores solo registran service workers e instalan PWAs en orígenes seguros.
+1. **HTTPS obligatorio** fuera de `localhost` (en la rama `vercel`, Vercel ya lo provee: ver [DEPLOY.md](DEPLOY.md)). Los navegadores solo registran service workers e instalan PWAs en orígenes seguros.
    - Producción: terminar TLS delante del contenedor `web`. La forma más simple es un proxy con certificados automáticos (por ejemplo Caddy o Traefik con Let's Encrypt) o el balanceador de la infraestructura. Otra opción es agregar `listen 443 ssl` con el certificado corporativo al nginx actual.
    - Mantén `AUTH_SECURE_COOKIES=true`: la cookie de sesión `Secure` exige HTTPS.
 2. **Manifest web** (`manifest.webmanifest`) con nombre, íconos de 192 y 512 px (incluido uno *maskable* para Android), colores, `display: standalone` y `start_url`.

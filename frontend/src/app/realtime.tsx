@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { HubConnectionBuilder, HubConnectionState, LogLevel, type HubConnection } from '@microsoft/signalr'
 import { useQueryClient } from '@tanstack/react-query'
-import { getAccessToken, refreshSession } from '@/api/client'
+import { DIRECT_API_ORIGIN, getAccessToken, refreshSession } from '@/api/client'
 import { collabKeys, type AppNotification } from '@/api/collab'
 import { invalidateTasks } from '@/api/tasks'
 import { useToast } from '@/components/ui'
@@ -22,7 +22,9 @@ export function RealtimeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!user) return
     const conn = new HubConnectionBuilder()
-      .withUrl('/hubs/notifications', {
+      // Directo a la API: los proxies de Vercel no admiten WebSockets. Autentica con el token, sin cookies.
+      .withUrl(`${DIRECT_API_ORIGIN}/hubs/notifications`, {
+        withCredentials: false,
         accessTokenFactory: async () => getAccessToken() ?? (await refreshSession())?.accessToken ?? '',
       })
       .withAutomaticReconnect()

@@ -5,7 +5,16 @@
  * - Los errores ProblemDetails se convierten en ApiError con `code` estable.
  */
 
-const BASE = '/api/v1'
+/**
+ * Orígenes de la API (ver docs/DEPLOY.md):
+ * - VITE_API_URL: base para las llamadas normales. Vacío = mismo origen (nginx en Docker o el
+ *   rewrite /api de Vercel), así la cookie de sesión SameSite=Strict funciona.
+ * - VITE_DIRECT_API_URL: API accedida directamente (SignalR por WebSocket y adjuntos grandes, que el
+ *   proxy de Vercel no admite). Estas llamadas usan el token JWT, no la cookie.
+ */
+const API_ORIGIN = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
+export const DIRECT_API_ORIGIN = (import.meta.env.VITE_DIRECT_API_URL ?? API_ORIGIN).replace(/\/$/, '')
+const BASE = `${API_ORIGIN}/api/v1`
 
 let accessToken: string | null = null
 let onSessionLost: (() => void) | null = null
@@ -83,16 +92,19 @@ export interface RequestOptions {
   signal?: AbortSignal
   /** Devuelve la Response sin parsear (descargas). */
   raw?: boolean
+  /** Llama a la API directamente (VITE_DIRECT_API_URL), sin pasar por el proxy del frontend. */
+  direct?: boolean
 }
 
-export function buildUrl(path: string, query?: Query) {
-  const url = new URL(BASE + path, window.location.origin)
+export function buildUrl(path: string, query?: Query, direct = false) {
+  const base = direct ? `${DIRECT_API_ORIGIN}/api/v1` : BASE
+  const url = new URL(base + path, window.location.origin)
   for (const [k, v] of Object.entries(query ?? {})) {
     if (v === undefined || v === null || v === '') continue
     if (Array.isArray(v)) v.forEach((x) => url.searchParams.append(k, x))
     else url.searchParams.set(k, String(v))
   }
-  return url.pathname + url.search
+  return url.origin === window.location.origin ? url.pathname + url.search : url.href
 }
 
 async function send(path: string, opts: RequestOptions): Promise<Response> {
@@ -104,12 +116,13 @@ async function send(path: string, opts: RequestOptions): Promise<Response> {
     body = JSON.stringify(opts.body)
   }
   if (accessToken) headers.Authorization = `Bearer ${accessToken}`
-  return fetch(buildUrl(path, opts.query), {
+  return fetch(buildUrl(path, opts.query, opts.direct), {
     method: opts.method ?? 'GET',
     headers,
     body,
     signal: opts.signal,
-    credentials: 'include',
+    // La cookie solo se necesita en el mismo origen (renovación de sesión).
+    credentials: opts.direct ? 'omit' : 'include',
   })
 }
 

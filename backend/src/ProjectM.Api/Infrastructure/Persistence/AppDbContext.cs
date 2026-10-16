@@ -126,7 +126,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options, DomainEventDis
 
     protected override void ConfigureConventions(ModelConfigurationBuilder builder)
     {
-        // Strings sin longitud explícita: nvarchar(500) en vez de nvarchar(max).
+        // Strings sin longitud explícita: varchar(500) (los textos largos declaran "text").
         builder.Properties<string>().HaveMaxLength(500);
         builder.Properties<decimal>().HavePrecision(18, 2);
     }

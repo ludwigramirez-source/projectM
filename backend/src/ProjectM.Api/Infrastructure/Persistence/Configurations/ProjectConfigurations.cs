@@ -33,10 +33,10 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
     public void Configure(EntityTypeBuilder<Project> e)
     {
         e.ToTable("Projects");
-        e.Property(x => x.Number).HasDefaultValueSql($"NEXT VALUE FOR {NumberSequence}");
+        e.Property(x => x.Number).HasDefaultValueSql($"nextval('\"{NumberSequence}\"')");
         e.HasIndex(x => x.Number).IsUnique();
         e.Property(x => x.Code).HasMaxLength(20)
-            .HasComputedColumnSql("CONCAT('PRJ-', RIGHT(CONCAT('0000', [Number]), CASE WHEN [Number] > 9999 THEN LEN([Number]) ELSE 4 END))", stored: true);
+            .HasComputedColumnSql("'PRJ-' || CASE WHEN \"Number\" > 9999 THEN \"Number\"::text ELSE lpad(\"Number\"::text, 4, '0') END", stored: true);
         e.HasIndex(x => x.Code);
         e.Property(x => x.Name).HasMaxLength(150).IsRequired();
         e.Property(x => x.Objective).HasMaxLength(2000);
@@ -44,7 +44,7 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
         e.Property(x => x.Currency).HasMaxLength(3);
         e.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
         e.Property(x => x.Health).HasConversion<string>().HasMaxLength(20);
-        e.Property(x => x.RowVersion).IsRowVersion();
+        e.Property(x => x.RowVersion).IsRowVersion(); // xmin
 
         e.HasOne(x => x.Space).WithMany(s => s.Projects).HasForeignKey(x => x.SpaceId).OnDelete(DeleteBehavior.Restrict);
         e.HasOne(x => x.Client).WithMany().HasForeignKey(x => x.ClientId).OnDelete(DeleteBehavior.Restrict);
@@ -126,7 +126,7 @@ public class ProjectClosureConfiguration : IEntityTypeConfiguration<ProjectClosu
         e.HasKey(x => x.ProjectId);
         e.Property(x => x.Summary).HasMaxLength(4000);
         e.Property(x => x.ForceJustification).HasMaxLength(2000);
-        e.PrimitiveCollection(x => x.Deliverables).HasColumnType("nvarchar(max)");
+        e.PrimitiveCollection(x => x.Deliverables).HasColumnType("text[]");
         e.HasOne<Project>().WithOne(p => p.Closure).HasForeignKey<ProjectClosure>(x => x.ProjectId).OnDelete(DeleteBehavior.Cascade);
         e.HasOne(x => x.ClosedBy).WithMany().HasForeignKey(x => x.ClosedById).OnDelete(DeleteBehavior.Restrict);
         e.HasMany(x => x.Lessons).WithOne().HasForeignKey(l => l.ProjectId).OnDelete(DeleteBehavior.Cascade);

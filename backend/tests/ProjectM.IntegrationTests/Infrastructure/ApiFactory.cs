@@ -2,20 +2,20 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Data.SqlClient;
+using Npgsql;
 
 namespace ProjectM.IntegrationTests.Infrastructure;
 
 /// <summary>
-/// Levanta la API contra una base de datos efímera en el SQL Server del compose
-/// (variable TEST_SQL_CONNECTION). La BD se elimina al terminar.
+/// Levanta la API contra una base de datos efímera en el PostgreSQL del compose
+/// (variable TEST_SQL_CONNECTION, conexión al servidor sin base). La BD se elimina al terminar.
 /// </summary>
 public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
     public const string AdminEmail = "admin@test.local";
     public const string AdminPassword = "Admin_Test_123";
 
-    private readonly string _dbName = $"ProjectM_Test_{Guid.NewGuid():N}";
+    private readonly string _dbName = $"projectm_test_{Guid.NewGuid():N}";
     private static string BaseConnection =>
         Environment.GetEnvironmentVariable("TEST_SQL_CONNECTION")
         ?? throw new InvalidOperationException("Define TEST_SQL_CONNECTION (usa scripts/test.ps1, que la toma de .env).");
@@ -49,11 +49,11 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     public new async Task DisposeAsync()
     {
         await base.DisposeAsync();
-        SqlConnection.ClearAllPools();
-        await using var conn = new SqlConnection(BaseConnection);
+        NpgsqlConnection.ClearAllPools();
+        await using var conn = new NpgsqlConnection($"{BaseConnection};Database=postgres");
         await conn.OpenAsync();
         await using var cmd = conn.CreateCommand();
-        cmd.CommandText = $"IF DB_ID('{_dbName}') IS NOT NULL BEGIN ALTER DATABASE [{_dbName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [{_dbName}]; END";
+        cmd.CommandText = $"DROP DATABASE IF EXISTS \"{_dbName}\" WITH (FORCE)";
         await cmd.ExecuteNonQueryAsync();
     }
 

@@ -11,6 +11,9 @@ public interface IFileStorage
 public class StorageOptions
 {
     public const string Section = "Storage";
+    /// <summary>"Local" (disco/volumen Docker) o "S3" (Supabase Storage u otro compatible).</summary>
+    public string Provider { get; set; } = "Local";
+    public S3StorageOptions S3 { get; set; } = new();
     public string AttachmentsPath { get; set; } = "/data/attachments";
     public int MaxFileSizeMb { get; set; } = 20;
     public long MaxFileSizeBytes => MaxFileSizeMb * 1024L * 1024L;

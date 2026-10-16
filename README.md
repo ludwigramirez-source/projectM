@@ -10,8 +10,12 @@ Gestor de proyectos web estilo ClickUp para uso interno de un equipo (un solo te
 - **Dashboard:** tareas por estado, vencidas, carga por persona y proyectos por estado
 - **Modo oscuro** con switch (sigue al sistema la primera vez y recuerda la elección), **diseño responsive** para celular y tableta, y **app instalable (PWA)** — ver [docs/PWA.md](docs/PWA.md)
 
-Stack: ASP.NET Core 9 + EF Core + SQL Server 2022, ASP.NET Identity + JWT, SignalR · React 19 + TypeScript + Vite + Tailwind v4 + dnd-kit · Docker Compose.
+Stack: ASP.NET Core 9 + EF Core + PostgreSQL 16, ASP.NET Identity + JWT, SignalR · React 19 + TypeScript + Vite + Tailwind v4 + dnd-kit · Docker Compose.
 Arquitectura, modelo de datos y endpoints: [PLAN.md](PLAN.md). Convenciones para desarrollo: [CLAUDE.md](CLAUDE.md).
+
+## Despliegue en la nube
+
+Esta rama (`vercel`) está preparada para **Vercel** (frontend), **Render** (API en Docker) y **Supabase** (PostgreSQL + Storage). La guía paso a paso está en [docs/DEPLOY.md](docs/DEPLOY.md). La rama `main` conserva la versión original con SQL Server y Docker Compose.
 
 ## Requisitos
 
@@ -29,7 +33,7 @@ Edita `.env` y reemplaza **todos** los valores de ejemplo:
 
 | Variable | Descripción |
 |---|---|
-| `MSSQL_SA_PASSWORD` | Contraseña de SQL Server (mayúsculas, minúsculas, números y símbolo; mín. 8) |
+| `POSTGRES_PASSWORD` | Contraseña del PostgreSQL local de Docker Compose |
 | `JWT_KEY` | Clave aleatoria de ≥ 32 caracteres (`openssl rand -base64 48`) |
 | `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` | Administrador inicial (contraseña ≥ 10 con mayúscula, minúscula y número) |
 | `SEED_DEMO` / `SEED_DEMO_PASSWORD` | Carga datos de demostración y contraseña común de los usuarios demo |
@@ -83,7 +87,7 @@ npm run dev            # http://localhost:5173
 ## Pruebas
 
 ```bash
-# Backend: unitarias + integración contra el SQL Server del compose (cada clase usa una BD efímera)
+# Backend: unitarias + integración contra el PostgreSQL del compose (cada clase usa una BD efímera)
 powershell -File scripts/test.ps1
 
 # Frontend: componentes, cliente API y contraste WCAG de la paleta

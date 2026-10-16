@@ -3,7 +3,8 @@
 Gestor de proyectos estilo ClickUp (MVP, un solo tenant, UI en español). Plan completo y decisiones de arquitectura: [PLAN.md](PLAN.md).
 
 ## Stack
-- Backend: ASP.NET Core 9 (Minimal APIs por feature), EF Core 9 + SQL Server 2022, Identity + JWT, SignalR.
+- Backend: ASP.NET Core 9 (Minimal APIs por feature), EF Core 9 + PostgreSQL (Npgsql; Supabase en producción), Identity + JWT, SignalR.
+- **Rama `vercel`**: despliegue Vercel (frontend) + Render (API Docker, `render.yaml`) + Supabase (Postgres + Storage S3). `main` conserva SQL Server. Guía: `docs/DEPLOY.md`.
 - Frontend: React 19 + TypeScript + Vite 8 + Tailwind v4 + dnd-kit + TanStack Query.
 - Despliegue: Docker Compose (`db`, `api`, `web` con nginx que hace proxy de `/api` y `/hubs`).
 
@@ -64,4 +65,8 @@ docker compose up -d --build      # web en http://localhost:8080, API en 127.0.0
 - `DemoSeeder` (Seed:Demo) usa fechas relativas a hoy, usuarios `@projectm.demo` e ignora eventos de dominio al sembrar.
 - PWA (`vite-plugin-pwa`, `registerType: prompt`): precache solo del cascarón; `/api`, `/hubs` y `/health` jamás en caché del SW (NetworkOnly + denylist del fallback). `PwaPrompts` (src/app/pwa.tsx) registra el SW y muestra “nueva versión” y “sin conexión”; “Instalar app” en el menú de usuario (instrucciones en iOS). nginx sirve `sw.js`, `manifest.webmanifest` e `index.html` sin caché. Íconos generados con `npx pwa-assets-generator` (`pwa-assets.config.ts`). El navegador integrado de la app de escritorio no registra service workers: verificar la PWA en Chrome.
 - Rutas cargadas con `React.lazy` (bundle inicial < 500 kB).
+- PostgreSQL: concurrencia con `xmin` (`uint RowVersion`, se envía como string); búsquedas con `EF.Functions.ILike(x, Search.Contains(q))`; columnas largas `text`, listas como arreglos (`text[]`, `uuid[]`), `ActivityLog.Data` en `jsonb`; código `PRJ-0001` como columna generada.
+- Adjuntos: `Storage:Provider` = `Local` (disco) o `S3` (`S3FileStorage`: Supabase Storage/R2/AWS; bucket privado, descarga vía API). Prueba `S3StorageTests` solo corre con `TEST_S3_URL/KEY/SECRET`.
+- Frontend: `VITE_API_URL` (vacío = mismo origen; en Vercel el rewrite `/api` hace de proxy para la cookie) y `VITE_DIRECT_API_URL` (SignalR y adjuntos directo a la API, con JWT). `Proxy:ForwardLimit` = proxies confiables delante de la API (1 nginx, 2 Vercel+Render).
+- nginx no registra query strings (el JWT de SignalR va en `?access_token=`).
 - git: un commit por fase.

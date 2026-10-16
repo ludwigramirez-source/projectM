@@ -134,7 +134,7 @@ public static class SpaceEndpoints
     private static async Task<IResult> ListClients(AppDbContext db, string? q, CancellationToken ct)
     {
         var query = db.Clients.AsNoTracking();
-        if (!string.IsNullOrWhiteSpace(q)) query = query.Where(c => c.Name.Contains(q.Trim()));
+        if (!string.IsNullOrWhiteSpace(q)) query = query.Where(c => EF.Functions.ILike(c.Name, Search.Contains(q)));
         return Results.Ok(await query.OrderBy(c => c.Name).Take(100).Select(c => new ClientDto(c.Id, c.Name)).ToListAsync(ct));
     }
 

@@ -1,0 +1,57 @@
+# Blueprint de Render para la API de ProjectM (ver docs/DEPLOY.md).
+# Render → New → Blueprint → selecciona este repositorio y la rama a desplegar.
+# Las variables con `sync: false` se completan en el panel de Render (son secretos).
+services:
+  - type: web
+    name: projectm-api
+    runtime: docker
+    # Plan con instancia siempre encendida: SignalR y el aviso de vencimientos necesitan
+    # que el proceso no se duerma (el plan gratuito se suspende tras 15 min sin tráfico).
+    plan: starter
+    region: oregon
+    dockerContext: ./backend
+    dockerfilePath: ./backend/src/ProjectM.Api/Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      # Render enruta al puerto indicado en PORT; la imagen escucha en 8080.
+      - key: PORT
+        value: "8080"
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      # Supabase → Project Settings → Database → Connection string → "Session pooler" (formato .NET/Npgsql).
+      - key: ConnectionStrings__Default
+        sync: false
+      - key: Jwt__Key
+        generateValue: true
+      # URL de Vercel (p. ej. https://projectm.vercel.app). Varias separadas por coma.
+      - key: Cors__AllowedOrigins
+        sync: false
+      - key: Database__MigrateOnStartup
+        value: "true"
+      - key: Seed__AdminEmail
+        sync: false
+      - key: Seed__AdminPassword
+        sync: false
+      - key: Seed__Demo
+        value: "false"
+      - key: App__TimeZone
+        value: America/Bogota
+      - key: Auth__SecureCookies
+        value: "true"
+      # Cliente → Vercel → balanceador de Render → API: 2 proxies confiables.
+      - key: Proxy__ForwardLimit
+        value: "2"
+      # Adjuntos en Supabase Storage (API compatible con S3).
+      - key: Storage__Provider
+        value: S3
+      - key: Storage__S3__ServiceUrl
+        sync: false
+      - key: Storage__S3__Region
+        sync: false
+      - key: Storage__S3__Bucket
+        value: attachments
+      - key: Storage__S3__AccessKeyId
+        sync: false
+      - key: Storage__S3__SecretAccessKey
+        sync: false

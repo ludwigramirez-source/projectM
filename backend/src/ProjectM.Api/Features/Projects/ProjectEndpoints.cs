@@ -48,9 +48,9 @@ public static class ProjectEndpoints
         if (status is not null) query = query.Where(p => p.Status == status);
         if (!string.IsNullOrWhiteSpace(q))
         {
-            var term = q.Trim();
-            query = query.Where(p => p.Name.Contains(term) || p.Code.Contains(term) ||
-                                     (p.Client != null && p.Client.Name.Contains(term)));
+            var term = Search.Contains(q);
+            query = query.Where(p => EF.Functions.ILike(p.Name, term) || EF.Functions.ILike(p.Code, term) ||
+                                     (p.Client != null && EF.Functions.ILike(p.Client.Name, term)));
         }
 
         var paged = await query
@@ -337,7 +337,7 @@ public class ProjectQueries(AppDbContext db)
 
         return new ProjectDetailDto(p.Id, p.Code, p.Name, p.SpaceId, p.SpaceName, p.ClientId, p.ClientName, p.Objective,
             p.Scope, p.PlannedStart, p.PlannedEnd, p.ActualStart, p.ActualEnd, p.Budget, p.Currency, p.ManagerId,
-            p.ManagerName, p.Status, p.Health, p.CreatedAt, p.ClosedAt, Convert.ToBase64String(p.RowVersion),
+            p.ManagerName, p.Status, p.Health, p.CreatedAt, p.ClosedAt, p.RowVersion.ToString(),
             await MembersAsync(id, ct), p.Lists, permissions);
     }
 
@@ -363,9 +363,7 @@ public static class ConcurrencyHelper
     public static void SetOriginalRowVersion<T>(AppDbContext db, T entity, string? rowVersion) where T : class
     {
         if (string.IsNullOrEmpty(rowVersion)) return;
-        byte[] bytes;
-        try { bytes = Convert.FromBase64String(rowVersion); }
-        catch (FormatException) { throw AppException.Validation("rowVersion", "Versión no válida."); }
-        db.Entry(entity).Property("RowVersion").OriginalValue = bytes;
+        if (!uint.TryParse(rowVersion, out var version)) throw AppException.Validation("rowVersion", "Versión no válida.");
+        db.Entry(entity).Property("RowVersion").OriginalValue = version;
     }
 }

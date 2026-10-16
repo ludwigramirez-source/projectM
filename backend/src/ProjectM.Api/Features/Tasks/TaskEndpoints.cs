@@ -71,7 +71,7 @@ public static class TaskEndpoints
         if (dueFrom is not null) tasks = tasks.Where(t => t.DueDate >= dueFrom);
         if (dueTo is not null) tasks = tasks.Where(t => t.DueDate <= dueTo);
         if (overdue == true) tasks = tasks.Where(t => t.Status != TaskItemStatus.Completada && t.DueDate < today);
-        if (!string.IsNullOrWhiteSpace(q)) tasks = tasks.Where(t => t.Title.Contains(q.Trim()));
+        if (!string.IsNullOrWhiteSpace(q)) tasks = tasks.Where(t => EF.Functions.ILike(t.Title, Search.Contains(q)));
         if (parentId is not null) tasks = tasks.Where(t => t.ParentTaskId == parentId);
         else if (includeSubtasks != true) tasks = tasks.Where(t => t.ParentTaskId == null);
 
@@ -351,7 +351,7 @@ public class TaskQueries(AppDbContext db, AppClock clock)
         return new TaskDetailDto(t.Id, t.ProjectId, t.ProjectName, t.ListId, t.ListName, t.ParentTaskId, t.ParentTitle,
             t.Title, t.Description, t.Status, t.BlockedReason, t.Priority, t.StartDate, t.DueDate, t.CompletedAt,
             t.AssigneeId, t.AssigneeName, t.MilestoneId, t.MilestoneName, t.CreatedByName, t.CreatedAt, t.UpdatedAt,
-            t.Status != TaskItemStatus.Completada && t.DueDate < today, Convert.ToBase64String(t.RowVersion),
+            t.Status != TaskItemStatus.Completada && t.DueDate < today, t.RowVersion.ToString(),
             t.Tags, t.Subtasks, custom, t.Attachments, canEdit);
     }
 }

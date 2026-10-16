@@ -33,7 +33,8 @@ public class Project : Entity
     public Guid CreatedById { get; set; }
     public DateTimeOffset? ClosedAt { get; private set; }
     public Guid? ClosedById { get; private set; }
-    public byte[] RowVersion { get; set; } = [];
+    /// <summary>Token de concurrencia optimista (columna de sistema xmin en PostgreSQL).</summary>
+    public uint RowVersion { get; set; }
 
     public List<ProjectMember> Members { get; set; } = [];
     public List<TaskList> Lists { get; set; } = [];

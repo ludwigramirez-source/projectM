@@ -13,7 +13,7 @@ public class CommentConfiguration : IEntityTypeConfiguration<Comment>
     {
         e.ToTable("Comments");
         e.Property(x => x.Body).HasMaxLength(5000).IsRequired();
-        e.PrimitiveCollection(x => x.Mentions).HasColumnType("nvarchar(max)");
+        e.PrimitiveCollection(x => x.Mentions).HasColumnType("uuid[]");
         e.HasQueryFilter(x => !x.IsDeleted);
         e.HasOne(x => x.Task).WithMany(t => t.Comments).HasForeignKey(x => x.TaskId).OnDelete(DeleteBehavior.Cascade);
         e.HasOne(x => x.Author).WithMany().HasForeignKey(x => x.AuthorId).OnDelete(DeleteBehavior.Restrict);
@@ -28,7 +28,7 @@ public class ActivityLogConfiguration : IEntityTypeConfiguration<ActivityLog>
         e.ToTable("ActivityLogs");
         e.Property(x => x.Type).HasMaxLength(50).IsRequired();
         e.Property(x => x.Message).HasMaxLength(1000).IsRequired();
-        e.Property(x => x.Data).HasColumnType("nvarchar(max)");
+        e.Property(x => x.Data).HasColumnType("jsonb");
         e.HasOne<Project>().WithMany().HasForeignKey(x => x.ProjectId).OnDelete(DeleteBehavior.Cascade);
         // Sin FK a la tarea: el historial sobrevive a la eliminación de la tarea.
         e.HasOne(x => x.Actor).WithMany().HasForeignKey(x => x.ActorId).OnDelete(DeleteBehavior.Restrict);

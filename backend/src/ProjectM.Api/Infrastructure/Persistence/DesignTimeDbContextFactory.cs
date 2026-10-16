@@ -8,6 +8,6 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
 {
     public AppDbContext CreateDbContext(string[] args) =>
         new(new DbContextOptionsBuilder<AppDbContext>()
-            .UseSqlServer("Server=design-time;Database=ProjectM;TrustServerCertificate=True")
+            .UseNpgsql("Host=design-time;Database=projectm;Username=postgres")
             .Options);
 }

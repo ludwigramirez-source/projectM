@@ -100,11 +100,10 @@ public static class ClosureEndpoints
 
     private static async Task<ProjectMetrics> MetricsAsync(AppDbContext db, Guid projectId, CancellationToken ct)
     {
-        var counts = await db.Tasks.Where(t => t.ProjectId == projectId)
-            .GroupBy(_ => 1)
-            .Select(g => new { Total = g.Count(), Completed = g.Count(t => t.Status == TaskItemStatus.Completada) })
-            .FirstOrDefaultAsync(ct);
-        return new ProjectMetrics(counts?.Total ?? 0, counts?.Completed ?? 0);
+        var tasks = db.Tasks.Where(t => t.ProjectId == projectId);
+        var total = await tasks.CountAsync(ct);
+        var completed = await tasks.CountAsync(t => t.Status == TaskItemStatus.Completada, ct);
+        return new ProjectMetrics(total, completed);
     }
 
     private static async Task<ClosureDto> ToDtoAsync(AppDbContext db, Project p, AppClock clock, CancellationToken ct)
