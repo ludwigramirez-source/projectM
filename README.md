@@ -8,6 +8,7 @@ Gestor de proyectos web estilo ClickUp para uso interno de un equipo (un solo te
 - **Colaboración:** comentarios con @menciones, historial de actividad y notificaciones en tiempo real
 - **Ciclo de vida del proyecto:** apertura con plantilla → seguimiento (avance, hitos, riesgos y bloqueos) → cierre con checklist, acta, lecciones aprendidas y cierre forzado justificado; los proyectos cerrados son de solo lectura y solo un Admin puede reabrirlos
 - **Dashboard:** tareas por estado, vencidas, carga por persona y proyectos por estado
+- **Modo oscuro** con switch (sigue al sistema la primera vez y recuerda la elección), **diseño responsive** para celular y tableta, y **app instalable (PWA)** — ver [docs/PWA.md](docs/PWA.md)
 
 Stack: ASP.NET Core 9 + EF Core + SQL Server 2022, ASP.NET Identity + JWT, SignalR · React 19 + TypeScript + Vite + Tailwind v4 + dnd-kit · Docker Compose.
 Arquitectura, modelo de datos y endpoints: [PLAN.md](PLAN.md). Convenciones para desarrollo: [CLAUDE.md](CLAUDE.md).
@@ -104,6 +105,12 @@ Cobertura de los flujos críticos: matriz de permisos por rol y por proyecto, ci
 - CORS restringido a `ALLOWED_ORIGINS`; en Docker el frontend y la API comparten origen vía nginx.
 - Adjuntos: lista blanca de extensiones, máx. 20 MB, nombre en disco aleatorio y descarga solo autorizada.
 - Sin secretos en el repositorio: toda la configuración sensible llega por variables de entorno (`.env` está en `.gitignore`).
+
+## App móvil (PWA)
+
+ProjectM se puede instalar como app en Android, iOS y escritorio (ícono propio, ventana sin barra del navegador, arranque sin conexión del cascarón y aviso de nuevas versiones). Requiere **HTTPS** fuera de `localhost`. En Android/escritorio usa **Instalar app** en el menú de usuario; en iOS, Safari → Compartir → **Agregar a pantalla de inicio**. Evaluación completa, limitaciones por plataforma y próximas fases (push, lectura offline): [docs/PWA.md](docs/PWA.md).
+
+Para regenerar los íconos desde `frontend/public/pwa-icon.svg`: `cd frontend && npx pwa-assets-generator`.
 
 ## Extensión: notificaciones por correo o WhatsApp
 

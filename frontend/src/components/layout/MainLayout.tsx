@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { Suspense, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
-import { CheckSquare, ChevronDown, ClipboardCheck, FolderKanban, LayoutDashboard, LayoutTemplate, LogOut, Palette, ShieldCheck, Users } from 'lucide-react'
+import { CheckSquare, ChevronDown, Download, ClipboardCheck, FolderKanban, LayoutDashboard, LayoutTemplate, LogOut, Palette, ShieldCheck, Users } from 'lucide-react'
 import { NavItem, NavSection } from './Nav'
 import { SpaceTree } from './SpaceTree'
 import { TaskDrawer } from '@/features/tasks/TaskDrawer'
 import { NotificationBell } from './NotificationBell'
 import { ThemeSwitch } from '@/app/theme'
+import { IosInstallHelp, useInstallApp } from '@/app/pwa'
 import { AppShell, Logo } from './AppShell'
 import { Avatar, PageLoader } from '@/components/ui'
 import { roleLabel, useAuth } from '@/app/auth'
@@ -57,6 +58,8 @@ function Sidebar() {
 
 function UserMenu() {
   const { user, logout } = useAuth()
+  const installer = useInstallApp()
+  const [iosHelp, setIosHelp] = useState(false)
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -86,11 +89,25 @@ function UserMenu() {
               <ShieldCheck className="size-3.5" /> {roleLabel[user.role]}
             </div>
           </div>
-          <button role="menuitem" onClick={logout} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-surface-muted">
+          {installer.available && (
+            <button
+              role="menuitem"
+              onClick={() => {
+                setOpen(false)
+                if (installer.needsIosInstructions) setIosHelp(true)
+                else void installer.install()
+              }}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-surface-muted touch:py-3"
+            >
+              <Download className="size-4" /> Instalar app
+            </button>
+          )}
+          <button role="menuitem" onClick={logout} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-surface-muted touch:py-3">
             <LogOut className="size-4" /> Cerrar sesión
           </button>
         </div>
       )}
+      {iosHelp && <IosInstallHelp onClose={() => setIosHelp(false)} />}
     </div>
   )
 }
@@ -111,7 +128,9 @@ export function MainLayout() {
         </div>
       }
     >
-      <Outlet />
+      <Suspense fallback={<PageLoader />}>
+        <Outlet />
+      </Suspense>
       <TaskDrawer />
     </AppShell>
   )

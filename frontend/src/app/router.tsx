@@ -1,15 +1,18 @@
+import { lazy } from 'react'
 import { createBrowserRouter } from 'react-router-dom'
 import { MainLayout, RequireRole } from '@/components/layout/MainLayout'
 import { LoginPage } from '@/features/auth/LoginPage'
-import { DashboardPage } from '@/features/dashboard/DashboardPage'
-import { UsersPage } from '@/features/admin/UsersPage'
-import { TemplatesPage } from '@/features/admin/TemplatesPage'
-import { ClosureChecklistPage } from '@/features/admin/ClosureChecklistPage'
-import { DesignSystemPage } from '@/features/design/DesignSystemPage'
-import { ProjectsPage } from '@/features/projects/ProjectsPage'
-import { NewProjectPage } from '@/features/projects/NewProjectPage'
-import { ProjectPage } from '@/features/projects/ProjectPage'
-import { MyTasksPage } from '@/features/tasks/MyTasksPage'
+
+// Las páginas se cargan bajo demanda (bundle inicial más liviano, importante en móviles/PWA).
+const DashboardPage = lazy(() => import('@/features/dashboard/DashboardPage').then((m) => ({ default: m.DashboardPage })))
+const UsersPage = lazy(() => import('@/features/admin/UsersPage').then((m) => ({ default: m.UsersPage })))
+const TemplatesPage = lazy(() => import('@/features/admin/TemplatesPage').then((m) => ({ default: m.TemplatesPage })))
+const ClosureChecklistPage = lazy(() => import('@/features/admin/ClosureChecklistPage').then((m) => ({ default: m.ClosureChecklistPage })))
+const DesignSystemPage = lazy(() => import('@/features/design/DesignSystemPage').then((m) => ({ default: m.DesignSystemPage })))
+const ProjectsPage = lazy(() => import('@/features/projects/ProjectsPage').then((m) => ({ default: m.ProjectsPage })))
+const NewProjectPage = lazy(() => import('@/features/projects/NewProjectPage').then((m) => ({ default: m.NewProjectPage })))
+const ProjectPage = lazy(() => import('@/features/projects/ProjectPage').then((m) => ({ default: m.ProjectPage })))
+const MyTasksPage = lazy(() => import('@/features/tasks/MyTasksPage').then((m) => ({ default: m.MyTasksPage })))
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },

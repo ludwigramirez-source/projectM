@@ -6,6 +6,7 @@ import './index.css'
 import { ToastProvider } from '@/components/ui'
 import { AuthProvider } from '@/app/auth'
 import { ThemeProvider } from '@/app/theme'
+import { PwaPrompts } from '@/app/pwa'
 import { RealtimeProvider } from '@/app/realtime'
 import { router } from '@/app/router'
 import { ApiError } from '@/api/client'
@@ -28,6 +29,7 @@ createRoot(document.getElementById('root')!).render(
           <AuthProvider>
             <RealtimeProvider>
               <RouterProvider router={router} />
+            <PwaPrompts />
             </RealtimeProvider>
           </AuthProvider>
         </ToastProvider>
