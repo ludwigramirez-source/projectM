@@ -98,7 +98,7 @@ export function ThemeSwitch({ className }: { className?: string }) {
       title={dark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
       onClick={toggle}
       className={cn(
-        'relative inline-flex h-7 w-12 shrink-0 items-center rounded-full border border-border bg-surface-muted transition-colors',
+        'inline-flex h-7 w-12 shrink-0 items-center rounded-full border border-border bg-surface-muted transition-colors',
         className,
       )}
     >

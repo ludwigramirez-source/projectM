@@ -50,9 +50,9 @@ function TaskGroup({ project, listId, name, tasks }: { project: ProjectDetail; l
         <span className="text-xs font-normal text-fg-muted">{tasks.length}</span>
       </button>
       {open && (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-sm">
-            <thead className="text-left text-xs text-fg-muted">
+        <div className="md:overflow-x-auto">
+          <table className="w-full text-sm md:min-w-[640px]">
+            <thead className="hidden text-left text-xs text-fg-muted md:table-header-group">
               <tr className="border-b border-border">
                 <th className="px-3 py-1.5 font-medium">Tarea</th>
                 <th className="w-32 px-3 py-1.5 font-medium">Estado</th>
@@ -61,17 +61,17 @@ function TaskGroup({ project, listId, name, tasks }: { project: ProjectDetail; l
                 <th className="w-24 px-3 py-1.5 font-medium">Prioridad</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="block md:table-row-group">
               {tasks.map((t) => <TaskRow key={t.id} task={t} canEdit={can} />)}
               {can && listId && (
-                <tr>
-                  <td colSpan={5} className="px-3 py-1">
+                <tr className="block md:table-row">
+                  <td colSpan={5} className="block px-3 py-1 md:table-cell">
                     <div className="flex items-center gap-2">
                       <Plus className="size-4 text-fg-muted" />
                       <input
                         aria-label={`Nueva tarea en ${name}`}
                         placeholder="Nueva tarea (Enter para crear)"
-                        className="w-full bg-transparent py-1.5 text-sm placeholder:text-fg-muted focus:outline-none"
+                        className="w-full bg-transparent py-1.5 text-sm placeholder:text-fg-muted focus:outline-none touch:py-2.5 touch:text-base"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         onKeyDown={(e) => {
@@ -96,19 +96,19 @@ export function TaskRow({ task, canEdit, showProject }: { task: TaskItem; canEdi
   const m = useTaskMutations(task.projectId)
   const toast = useToast()
   return (
-    <tr className="group border-b border-border last:border-0 hover:bg-surface-muted/60">
-      <td className="px-3 py-2">
+    <tr className="group flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-border px-3 py-2.5 last:border-0 hover:bg-surface-muted/60 md:table-row md:p-0">
+      <td className="block basis-full md:table-cell md:px-3 md:py-2">
         <div className="flex items-center gap-2">
           <input
             type="checkbox"
-            className="size-4 shrink-0 accent-success-solid"
+            className="size-4 shrink-0 accent-success-solid touch:size-5"
             aria-label={`Completar ${task.title}`}
             checked={task.status === 'Completada'}
             disabled={!canEdit}
             onChange={(e) => m.status.mutate({ id: task.id, status: e.target.checked ? 'Completada' : 'Pendiente' }, { onError: (err) => toast.error(errorMessage(err)) })}
           />
           <div className="min-w-0">
-            <button onClick={() => open(task.id)} className={cn('block max-w-full truncate text-left font-medium hover:text-primary-fg', task.status === 'Completada' && 'text-fg-muted line-through')}>
+            <button onClick={() => open(task.id)} className={cn('block max-w-full text-left font-medium hover:text-primary-fg md:truncate', task.status === 'Completada' && 'text-fg-muted line-through')}>
               {task.title}
             </button>
             <div className="flex flex-wrap items-center gap-1.5 text-xs text-fg-muted">
@@ -121,15 +121,15 @@ export function TaskRow({ task, canEdit, showProject }: { task: TaskItem; canEdi
           </div>
         </div>
       </td>
-      <td className="px-3 py-2"><StatusBadge status={task.status} overdue={task.isOverdue} /></td>
-      <td className="px-3 py-2">
+      <td className="block pl-6 md:table-cell md:px-3 md:py-2"><StatusBadge status={task.status} overdue={task.isOverdue} /></td>
+      <td className="block md:table-cell md:px-3 md:py-2">
         <span className="flex items-center gap-2">
           <Avatar name={task.assigneeName} size="sm" />
-          <span className="truncate text-xs">{task.assigneeName ?? <span className="text-fg-muted">Sin asignar</span>}</span>
+          <span className="hidden truncate text-xs md:inline">{task.assigneeName ?? <span className="text-fg-muted">Sin asignar</span>}</span>
         </span>
       </td>
-      <td className={cn('px-3 py-2 text-xs', task.isOverdue ? 'font-medium text-danger-fg' : 'text-fg-muted')}>{fmtShortDate(task.dueDate)}</td>
-      <td className="px-3 py-2"><PriorityBadge priority={task.priority} /></td>
+      <td className={cn('block text-xs md:table-cell md:px-3 md:py-2', task.isOverdue ? 'font-medium text-danger-fg' : 'text-fg-muted')}>{fmtShortDate(task.dueDate)}</td>
+      <td className="block md:table-cell md:px-3 md:py-2"><PriorityBadge priority={task.priority} /></td>
     </tr>
   )
 }

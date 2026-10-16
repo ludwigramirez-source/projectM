@@ -8,7 +8,7 @@ import {
 import { cn } from '@/lib/cn'
 
 const control =
-  'w-full rounded-md border bg-surface px-3 text-sm text-fg placeholder:text-fg-muted ' +
+  'w-full rounded-md border bg-surface px-3 text-sm touch:text-base text-fg placeholder:text-fg-muted ' +
   'transition-colors focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring-soft ' +
   'disabled:bg-surface-muted disabled:text-fg-muted'
 
@@ -61,7 +61,7 @@ export function Input({
           aria-invalid={!!error}
           aria-describedby={desc}
           required={required}
-          className={cn(control, 'h-9', error ? 'border-danger-mark' : 'border-border', className)}
+          className={cn(control, 'h-9 touch:h-11', error ? 'border-danger-mark' : 'border-border', className)}
           {...rest}
         />
       )}
@@ -112,7 +112,7 @@ export function Select({
           aria-invalid={!!error}
           aria-describedby={desc}
           required={required}
-          className={cn(control, 'h-9 pr-8', error ? 'border-danger-mark' : 'border-border', className)}
+          className={cn(control, 'h-9 touch:h-11 pr-8', error ? 'border-danger-mark' : 'border-border', className)}
           {...rest}
         >
           {children}
@@ -129,7 +129,7 @@ export function Checkbox({
 }: { label: ReactNode } & InputHTMLAttributes<HTMLInputElement>) {
   return (
     <label className={cn('inline-flex cursor-pointer items-center gap-2 text-sm', className)}>
-      <input type="checkbox" className="size-4 rounded border-border accent-primary-solid" {...rest} />
+      <input type="checkbox" className="size-4 touch:size-5 rounded border-border accent-primary-solid" {...rest} />
       {label}
     </label>
   )

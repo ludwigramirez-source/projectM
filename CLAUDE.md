@@ -39,6 +39,7 @@ docker compose up -d --build      # web en http://localhost:8080, API en 127.0.0
 - Patrones: badge = `bg-X-subtle text-X-subtle-fg`; botón = `bg-X-solid text-on-X-solid hover:bg-X-solid-hover`; texto de estado/error = `text-X-fg`; puntos/barras/bordes de color = `X-mark`.
 - Tema: `ThemeProvider`/`ThemeSwitch` (`src/app/theme.tsx`); `data-theme` en `<html>`, inicia según el sistema y recuerda la elección (`localStorage.pm-theme`); script inline en `index.html` evita el parpadeo; al imprimir se fuerza claro.
 - Estados de tarea → tonos: Pendiente secondary, En progreso primary, En revisión accent, Completada success, Bloqueada/Vencida danger (`src/lib/status.ts`).
+- Responsive (mobile-first): variante `touch:` (= `pointer: coarse`) para objetivos ≥ 40 px y campos de 16 px (evita zoom en iOS); `pt-safe`/`pb-safe` para áreas seguras; tablas pasan a tarjetas bajo `md` (`ListView`), filtros de tareas plegables en móvil, calendario en vista Agenda bajo 640 px, Kanban/Calendario con `TouchSensor` (mantener presionado para arrastrar); modales como hoja inferior en móvil.
 - TypeScript sin `enum` (`erasableSyntaxOnly`): usar uniones de strings. Alias `@/` → `src/`.
 - Lint: oxlint (plantilla de Vite 8) + Prettier.
 
@@ -51,6 +52,7 @@ docker compose up -d --build      # web en http://localhost:8080, API en 127.0.0
 - Entidades con `Id` generado en cliente (`Guid.NewGuid()`, `ValueGeneratedNever`).
 - Build/test del backend 100 % en Docker (decisión del usuario, sin SDK local).
 - Adjuntos en disco (`/data/attachments`, volumen Docker) detrás de `IFileStorage`.
+- Rate limiting por IP: login 10/min (`Auth:LoginPermitLimitPerMinute`) y refresh 120/min (`Auth:RefreshPermitLimitPerMinute`); el cliente reintenta el refresh ante 429 en vez de cerrar la sesión.
 - Refresh token rotativo en cookie HttpOnly `SameSite=Strict` con path `/api/v1/auth`; access token solo en memoria del SPA.
 - Tareas: `PUT /tasks/{id}` reemplaza los campos básicos (con `rowVersion`); estado y movimiento van por `PATCH .../status` y `PATCH .../move` (orden fraccional con rebalanceo).
 - Campos personalizados obligatorios: no bloquean el alta rápida; se exigen al completar la tarea (`CAMPOS_REQUERIDOS`) y no pueden vaciarse.

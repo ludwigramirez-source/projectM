@@ -3,7 +3,8 @@ import {
   DndContext,
   DragOverlay,
   KeyboardSensor,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   closestCorners,
   useDroppable,
   useSensor,
@@ -46,7 +47,9 @@ export function KanbanView({ project, tasks, listId }: { project: ProjectDetail;
   const toast = useToast()
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    // Táctil: mantener presionado para arrastrar; deslizar sigue desplazando el tablero.
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
 
@@ -103,7 +106,7 @@ export function KanbanView({ project, tasks, listId }: { project: ProjectDetail;
   const active = activeId ? byId.get(activeId) : undefined
 
   return (
-    <div className="overflow-x-auto p-4 sm:p-6">
+    <div className="snap-x snap-mandatory overflow-x-auto p-4 sm:snap-none sm:p-6">
       <DndContext
         sensors={can ? sensors : []}
         collisionDetection={closestCorners}
@@ -150,7 +153,7 @@ function Column({ project, status, ids, byId, can, listId }: { project: ProjectD
   const toast = useToast()
   const targetList = listId ?? project.lists[0]?.id
   return (
-    <section className={cn('flex w-72 shrink-0 flex-col rounded-lg border-t-4 bg-surface-muted', toneBorder[meta.tone])} aria-label={`Columna ${meta.label}`}>
+    <section className={cn('flex w-[85vw] max-w-72 shrink-0 snap-start scroll-ml-4 flex-col rounded-lg border-t-4 bg-surface-muted sm:w-72', toneBorder[meta.tone])} aria-label={`Columna ${meta.label}`}>
       <header className="flex items-center justify-between px-3 py-2">
         <h3 className="flex items-center gap-2 text-sm font-semibold">
           <span className={cn('size-2 rounded-full', toneDot[meta.tone])} />
@@ -158,7 +161,7 @@ function Column({ project, status, ids, byId, can, listId }: { project: ProjectD
           <span className="rounded-full bg-surface px-1.5 text-xs font-normal text-fg-muted">{ids.length}</span>
         </h3>
         {can && status !== 'Bloqueada' && targetList && (
-          <button onClick={() => setAdding(true)} className="rounded p-1 text-fg-muted hover:bg-surface hover:text-fg" aria-label={`Nueva tarea en ${meta.label}`}>
+          <button onClick={() => setAdding(true)} className="rounded p-1 text-fg-muted hover:bg-surface hover:text-fg touch:p-2.5" aria-label={`Nueva tarea en ${meta.label}`}>
             <Plus className="size-4" />
           </button>
         )}

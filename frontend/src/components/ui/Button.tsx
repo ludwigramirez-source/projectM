@@ -14,8 +14,8 @@ const variants: Record<Variant, string> = {
 }
 
 const sizes: Record<Size, string> = {
-  sm: 'h-8 px-3 text-xs gap-1.5',
-  md: 'h-9 px-4 text-sm gap-2',
+  sm: 'h-8 touch:h-10 px-3 text-xs gap-1.5',
+  md: 'h-9 touch:h-11 px-4 text-sm gap-2',
 }
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -45,7 +45,7 @@ export function Button({
         'disabled:cursor-not-allowed disabled:opacity-50',
         variants[variant],
         sizes[size],
-        !children && 'px-2',
+        !children && 'px-2 touch:min-w-10',
         className,
       )}
       {...rest}

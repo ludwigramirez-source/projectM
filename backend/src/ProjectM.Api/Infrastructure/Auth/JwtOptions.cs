@@ -15,5 +15,8 @@ public class AuthOptions
     public const string Section = "Auth";
     /// <summary>Marca la cookie de refresh como Secure (requiere HTTPS salvo en localhost).</summary>
     public bool SecureCookies { get; set; } = true;
-    public int LoginPermitLimitPerMinute { get; set; } = 5;
+    /// <summary>Intentos de login por IP y minuto (además del bloqueo por cuenta tras 5 fallos).</summary>
+    public int LoginPermitLimitPerMinute { get; set; } = 10;
+    /// <summary>Renovaciones de sesión por IP y minuto (cada recarga de página hace una).</summary>
+    public int RefreshPermitLimitPerMinute { get; set; } = 120;
 }

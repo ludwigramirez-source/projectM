@@ -49,9 +49,18 @@ export const setOnSessionLost = (fn: () => void) => {
   onSessionLost = fn
 }
 
+/** POST de refresh; ante 429 (límite por IP) reintenta con espera en vez de cerrar la sesión. */
+async function fetchRefresh(attempt = 0): Promise<Response> {
+  const res = await fetch(`${BASE}/auth/refresh`, { method: 'POST', credentials: 'include' })
+  if (res.status !== 429 || attempt >= 3) return res
+  const wait = Number(res.headers.get('Retry-After')) * 1000 || 1500 * (attempt + 1)
+  await new Promise((r) => setTimeout(r, wait))
+  return fetchRefresh(attempt + 1)
+}
+
 /** Renueva la sesión con la cookie de refresh. Single-flight. */
 export function refreshSession(): Promise<AuthResponse | null> {
-  refreshing ??= fetch(`${BASE}/auth/refresh`, { method: 'POST', credentials: 'include' })
+  refreshing ??= fetchRefresh()
     .then(async (r) => {
       if (!r.ok) return null
       const body = (await r.json()) as AuthResponse

@@ -59,9 +59,9 @@ export function MyTasksPage() {
               if (!items.length) return null
               return (
                 <Card key={b.title} title={<span className={b.tone}>{b.title} ({items.length})</span>} bodyClassName="p-0">
-                  <div className="overflow-x-auto">
-                    <table className="w-full min-w-[720px] text-sm">
-                      <tbody>
+                  <div className="md:overflow-x-auto">
+                    <table className="w-full text-sm md:min-w-[640px]">
+                      <tbody className="block md:table-row-group">
                         {items.map((t) => <TaskRow key={t.id} task={t} canEdit showProject />)}
                       </tbody>
                     </table>

@@ -28,8 +28,13 @@ export function NotificationBell() {
 
   useEffect(() => {
     const h = (e: MouseEvent) => ref.current && !ref.current.contains(e.target as Node) && setOpen(false)
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
     document.addEventListener('mousedown', h)
-    return () => document.removeEventListener('mousedown', h)
+    document.addEventListener('keydown', esc)
+    return () => {
+      document.removeEventListener('mousedown', h)
+      document.removeEventListener('keydown', esc)
+    }
   }, [])
 
   const go = (n: AppNotification) => {
@@ -42,7 +47,7 @@ export function NotificationBell() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="relative rounded-md p-2 text-fg-muted hover:bg-surface-muted hover:text-fg"
+        className="relative rounded-md p-2 text-fg-muted hover:bg-surface-muted hover:text-fg touch:p-2.5"
         aria-label={count ? `Notificaciones (${count} sin leer)` : 'Notificaciones'}
         aria-expanded={open}
       >
@@ -54,7 +59,7 @@ export function NotificationBell() {
         )}
       </button>
       {open && (
-        <div className="absolute right-0 z-30 mt-1 w-[min(24rem,calc(100vw-1.5rem))] overflow-hidden rounded-lg border border-border bg-surface shadow-xl">
+        <div className="fixed inset-x-2 top-14 z-30 overflow-hidden rounded-lg border border-border bg-surface shadow-xl sm:absolute sm:inset-x-auto sm:top-auto sm:right-0 sm:mt-1 sm:w-96">
           <header className="flex items-center justify-between border-b border-border px-4 py-2.5">
             <h2 className="text-sm font-semibold">Notificaciones</h2>
             {count > 0 && (

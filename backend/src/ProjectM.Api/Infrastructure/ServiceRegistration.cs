@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -100,15 +101,20 @@ public static class ServiceRegistration
         services.AddRateLimiter(o =>
         {
             o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-            o.AddPolicy(AuthEndpoints.LoginRateLimitPolicy, http =>
-                RateLimitPartition.GetFixedWindowLimiter(
-                    http.Connection.RemoteIpAddress?.ToString() ?? "desconocido",
-                    _ => new FixedWindowRateLimiterOptions
-                    {
-                        PermitLimit = authOpt.LoginPermitLimitPerMinute,
-                        Window = TimeSpan.FromMinutes(1),
-                        QueueLimit = 0
-                    }));
+            // Login: estricto (fuerza bruta; además hay bloqueo por cuenta). Refresh: holgado, porque
+            // cada recarga de página lo usa y una oficina tras NAT comparte la misma IP.
+            static void PerIpPolicy(RateLimiterOptions o, string name, int limit) =>
+                o.AddPolicy(name, http =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        http.Connection.RemoteIpAddress?.ToString() ?? "desconocido",
+                        _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = limit,
+                            Window = TimeSpan.FromMinutes(1),
+                            QueueLimit = 0
+                        }));
+            PerIpPolicy(o, AuthEndpoints.LoginRateLimitPolicy, authOpt.LoginPermitLimitPerMinute);
+            PerIpPolicy(o, AuthEndpoints.RefreshRateLimitPolicy, authOpt.RefreshPermitLimitPerMinute);
             o.OnRejected = async (ctx, ct) =>
             {
                 var pd = new ProblemDetails

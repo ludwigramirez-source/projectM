@@ -99,8 +99,8 @@ export function UsersPage() {
                 <thead className="border-b border-border bg-surface-muted text-left text-xs text-fg-muted">
                   <tr>
                     <th className="px-4 py-2 font-medium">Nombre</th>
-                    <th className="px-4 py-2 font-medium">Rol</th>
-                    <th className="px-4 py-2 font-medium">Estado</th>
+                    <th className="hidden px-4 py-2 font-medium sm:table-cell">Rol</th>
+                    <th className="hidden px-4 py-2 font-medium sm:table-cell">Estado</th>
                     <th className="hidden px-4 py-2 font-medium md:table-cell">Alta</th>
                     <th className="px-4 py-2" />
                   </tr>
@@ -108,24 +108,29 @@ export function UsersPage() {
                 <tbody>
                   {data.items.map((u) => (
                     <tr key={u.id} className="border-b border-border last:border-0 hover:bg-surface-muted/60">
-                      <td className="px-4 py-2.5">
+                      <td className="px-3 py-2.5 sm:px-4">
                         <div className="flex items-center gap-2.5">
-                          <Avatar name={u.fullName} />
-                          <div className="min-w-0">
+                          <span className="hidden sm:block"><Avatar name={u.fullName} /></span>
+                          <div className="min-w-0 break-words">
                             <div className="font-medium">{u.fullName}</div>
-                            <div className="truncate text-xs text-fg-muted">{u.email}</div>
+                            <div className="text-xs break-all text-fg-muted sm:truncate">{u.email}</div>
+                            {/* En móvil, rol y estado van bajo el nombre. */}
+                            <div className="mt-1 flex flex-wrap gap-1 sm:hidden">
+                              <Badge tone={roleTone[u.role]}>{roleLabel[u.role]}</Badge>
+                              {!u.isActive && <Badge tone="neutral">Inactivo</Badge>}
+                            </div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-2.5">
+                      <td className="hidden px-4 py-2.5 sm:table-cell">
                         <Badge tone={roleTone[u.role]}>{roleLabel[u.role]}</Badge>
                       </td>
-                      <td className="px-4 py-2.5">
+                      <td className="hidden px-4 py-2.5 sm:table-cell">
                         {u.isActive ? <Badge tone="success" dot>Activo</Badge> : <Badge tone="neutral">Inactivo</Badge>}
                       </td>
                       <td className="hidden px-4 py-2.5 text-fg-muted md:table-cell">{fmtDate(u.createdAt)}</td>
-                      <td className="px-4 py-2.5">
-                        <div className="flex justify-end gap-1">
+                      <td className="px-2 py-2.5 sm:px-4">
+                        <div className="flex justify-end gap-0.5 sm:gap-1">
                           <Button variant="ghost" size="sm" aria-label="Editar" icon={<Pencil className="size-4" />} onClick={() => setEditing(u)} />
                           <Button variant="ghost" size="sm" aria-label="Restablecer contraseña" icon={<KeyRound className="size-4" />} onClick={() => setResetting(u)} />
                           {u.isActive && u.id !== me?.id && (

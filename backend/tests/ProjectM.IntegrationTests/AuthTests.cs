@@ -151,6 +151,15 @@ public class RateLimitTests(RateLimitedApiFactory factory) : IClassFixture<RateL
 
         await last!.ShouldBeAsync(429, "DEMASIADAS_SOLICITUDES");
     }
+
+    [Fact]
+    public async Task Refresh_tiene_su_propio_limite_y_no_consume_el_del_login()
+    {
+        // Cada recarga de página renueva la sesión: no debe agotar el límite estricto del login.
+        var client = factory.CreateClient();
+        for (var i = 0; i < 6; i++)
+            await (await client.PostAsync("/api/v1/auth/refresh", null)).ShouldBeAsync(401);
+    }
 }
 
 [Collection(ApiCollection.Name)]

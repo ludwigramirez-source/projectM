@@ -1,6 +1,9 @@
 @import 'tailwindcss';
 @import './styles/tokens.css';
 
+/* Dispositivos táctiles (puntero grueso): objetivos ≥ 40 px y sin zoom de iOS en formularios. */
+@custom-variant touch (@media (pointer: coarse));
+
 /* Solo existen los colores de la paleta: se eliminan los colores por defecto de Tailwind. */
 @theme inline {
   --color-*: initial;
@@ -149,7 +152,22 @@
     @apply bg-bg text-fg font-sans antialiased;
     font-size: 14px;
   }
+  /* iOS hace zoom al enfocar campos con texto < 16 px. */
+  @media (pointer: coarse) {
+    input,
+    select,
+    textarea {
+      font-size: 16px;
+    }
+  }
   *:focus-visible {
     @apply outline-2 outline-offset-2 outline-ring;
   }
+}
+
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top);
 }

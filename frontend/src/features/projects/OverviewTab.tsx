@@ -17,7 +17,7 @@ export function Kpi({ icon, label, value, tone = 'neutral', hint }: { icon: Reac
     <div className="flex items-center gap-3 rounded-lg border border-border bg-surface p-3">
       <span className={cn('flex size-9 shrink-0 items-center justify-center rounded-md', tones[tone])}>{icon}</span>
       <div className="min-w-0">
-        <div className="truncate text-xs text-fg-muted">{label}</div>
+        <div className="text-xs leading-tight text-fg-muted">{label}</div>
         <div className="text-lg leading-tight font-semibold">{value}</div>
         {hint && <div className="text-xs text-fg-muted">{hint}</div>}
       </div>

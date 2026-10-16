@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { DndContext, PointerSensor, pointerWithin, useDraggable, useDroppable, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
+import { DndContext, KeyboardSensor, MouseSensor, TouchSensor, pointerWithin, useDraggable, useDroppable, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   addDays,
@@ -23,7 +23,7 @@ import { invalidateTasks, type TaskFilters, type TaskItem } from '@/api/tasks'
 import { Button, PageLoader, useToast } from '@/components/ui'
 import { cn } from '@/lib/cn'
 import { toDateInput } from '@/lib/format'
-import { taskStatusMeta, toneBadge, type Tone } from '@/lib/status'
+import { taskStatusMeta, toneBadge, toneDot, type Tone } from '@/lib/status'
 import { useTaskDrawer } from './TaskDrawer'
 
 interface CalendarMilestone {
@@ -39,12 +39,16 @@ interface CalendarData {
   milestones: CalendarMilestone[]
 }
 
-type Mode = 'mes' | 'semana'
+type Mode = 'mes' | 'semana' | 'agenda'
+const MODE_LABEL: Record<Mode, string> = { mes: 'Mes', semana: 'Semana', agenda: 'Agenda' }
+/** En pantallas pequeñas la grilla de 7 columnas no es legible: se arranca en Agenda. */
+const initialMode = (): Mode =>
+  typeof matchMedia === 'function' && matchMedia('(max-width: 639px)').matches ? 'agenda' : 'mes'
 const WEEK = { weekStartsOn: 1 as const, locale: es }
 
 /** Calendario mensual/semanal. Las tareas se ubican por vencimiento (o inicio); se reprograman arrastrando. */
 export function CalendarView({ projectId, filters, canEdit, showProject }: { projectId?: string; filters?: TaskFilters; canEdit: boolean; showProject?: boolean }) {
-  const [mode, setMode] = useState<Mode>('mes')
+  const [mode, setMode] = useState<Mode>(initialMode)
   const [cursor, setCursor] = useState(() => new Date())
   const { open } = useTaskDrawer()
   const qc = useQueryClient()
@@ -69,7 +73,12 @@ export function CalendarView({ projectId, filters, canEdit, showProject }: { pro
     onError: (e) => toast.error(errorMessage(e)),
   })
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
+  // Táctil con retardo para no confundir arrastrar con desplazar la página.
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
+    useSensor(KeyboardSensor),
+  )
 
   const visibleTasks = (data?.tasks ?? []).filter(
     (t) =>
@@ -108,13 +117,13 @@ export function CalendarView({ projectId, filters, canEdit, showProject }: { pro
           <Button variant="secondary" size="sm" onClick={() => setCursor(new Date())}>Hoy</Button>
           <Button variant="ghost" size="sm" aria-label="Anterior" icon={<ChevronLeft className="size-4" />} onClick={() => step(-1)} />
           <Button variant="ghost" size="sm" aria-label="Siguiente" icon={<ChevronRight className="size-4" />} onClick={() => step(1)} />
-          <h2 className="text-lg font-semibold capitalize">{title}</h2>
+          <h2 className="text-base font-semibold capitalize sm:text-lg">{title}</h2>
         </div>
         <div role="tablist" className="flex rounded-md border border-border p-0.5 text-sm">
-          {(['mes', 'semana'] as Mode[]).map((m) => (
+          {(['mes', 'semana', 'agenda'] as Mode[]).map((m) => (
             <button key={m} role="tab" aria-selected={mode === m} onClick={() => setMode(m)}
-              className={cn('rounded px-3 py-1 capitalize', mode === m ? 'bg-primary-subtle font-medium text-primary-fg' : 'text-fg-muted')}>
-              {m}
+              className={cn('rounded px-3 py-1 touch:py-2', mode === m ? 'bg-primary-subtle font-medium text-primary-fg' : 'text-fg-muted')}>
+              {MODE_LABEL[m]}
             </button>
           ))}
         </div>
@@ -122,6 +131,8 @@ export function CalendarView({ projectId, filters, canEdit, showProject }: { pro
 
       {isLoading ? (
         <PageLoader />
+      ) : mode === 'agenda' ? (
+        <Agenda days={days} tasks={visibleTasks} dayOf={dayOf} milestones={data?.milestones ?? []} onOpen={open} showProject={showProject} />
       ) : (
         <DndContext sensors={canEdit ? sensors : []} collisionDetection={pointerWithin} onDragEnd={onDragEnd}>
           <div className="overflow-x-auto rounded-lg border border-border bg-surface">
@@ -153,9 +164,64 @@ export function CalendarView({ projectId, filters, canEdit, showProject }: { pro
         </DndContext>
       )}
       <p className="mt-2 text-xs text-fg-muted">
-        Las tareas aparecen el día de su vencimiento (o de inicio si no tienen vencimiento). {canEdit && 'Arrastra una tarea para reprogramarla conservando su duración.'}
+        Las tareas aparecen el día de su vencimiento (o de inicio si no tienen vencimiento).{' '}
+        {canEdit && mode !== 'agenda' && 'Arrastra una tarea (en táctil, mantén presionado) para reprogramarla conservando su duración.'}
       </p>
     </div>
+  )
+}
+
+/** Lista por día (vista pensada para móvil). */
+function Agenda({ days, tasks, dayOf, milestones, onOpen, showProject }: {
+  days: Date[]
+  tasks: TaskItem[]
+  dayOf: (t: TaskItem) => string
+  milestones: CalendarMilestone[]
+  onOpen: (id: string) => void
+  showProject?: boolean
+}) {
+  return (
+    <ol className="space-y-3">
+      {days.map((d) => {
+        const key = toDateInput(d)
+        const dayTasks = tasks.filter((t) => dayOf(t) === key)
+        const dayMilestones = milestones.filter((m) => m.dueDate === key)
+        return (
+          <li key={key} className="rounded-lg border border-border bg-surface">
+            <h3 className={cn('flex items-center gap-2 border-b border-border px-3 py-2 text-sm font-semibold', isToday(d) && 'text-primary-fg')}>
+              <span className="first-letter:uppercase">{format(d, "EEEE d 'de' MMMM", { locale: es })}</span>
+              {isToday(d) && <span className="rounded-full bg-primary-subtle px-2 text-xs font-medium text-primary-subtle-fg">Hoy</span>}
+            </h3>
+            {dayTasks.length === 0 && dayMilestones.length === 0 ? (
+              <p className="px-3 py-2 text-xs text-fg-muted">Sin tareas</p>
+            ) : (
+              <ul className="divide-y divide-border">
+                {dayMilestones.map((m) => (
+                  <li key={m.id} className={cn('flex items-center gap-2 px-3 py-2 text-sm font-medium', m.completedAt ? toneBadge.success : toneBadge.accent)}>
+                    <Flag className="size-4 shrink-0" /> Hito: {m.name}
+                  </li>
+                ))}
+                {dayTasks.map((t) => (
+                  <li key={t.id}>
+                    <button onClick={() => onOpen(t.id)} className="flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-surface-muted">
+                      <span className={cn('size-2.5 shrink-0 rounded-full', toneDot[t.isOverdue ? 'danger' : taskStatusMeta[t.status].tone])} />
+                      <span className="min-w-0 flex-1">
+                        <span className={cn('block text-sm', t.status === 'Completada' && 'text-fg-muted line-through')}>{t.title}</span>
+                        <span className="block truncate text-xs text-fg-muted">
+                          {t.isOverdue ? 'Vencida' : taskStatusMeta[t.status].label}
+                          {showProject ? ` · ${t.projectName}` : ` · ${t.listName}`}
+                          {t.assigneeName && ` · ${t.assigneeName}`}
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
+        )
+      })}
+    </ol>
   )
 }
 

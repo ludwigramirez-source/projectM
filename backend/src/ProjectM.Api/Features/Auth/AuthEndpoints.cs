@@ -38,13 +38,14 @@ public static class AuthEndpoints
     public const string RefreshCookie = "pm_refresh";
     public const string CookiePath = "/api/v1/auth";
     public const string LoginRateLimitPolicy = "login";
+    public const string RefreshRateLimitPolicy = "refresh";
 
     public static RouteGroupBuilder MapAuthEndpoints(this RouteGroupBuilder api)
     {
         var g = api.MapGroup("/auth").WithTags("Autenticación");
 
         g.MapPost("/login", Login).AllowAnonymous().RequireRateLimiting(LoginRateLimitPolicy).Validate<LoginRequest>();
-        g.MapPost("/refresh", Refresh).AllowAnonymous().RequireRateLimiting(LoginRateLimitPolicy);
+        g.MapPost("/refresh", Refresh).AllowAnonymous().RequireRateLimiting(RefreshRateLimitPolicy);
         g.MapPost("/logout", Logout).AllowAnonymous();
         g.MapGet("/me", Me).RequireAuthorization();
         g.MapPost("/change-password", ChangePassword).RequireAuthorization().Validate<ChangePasswordRequest>();
