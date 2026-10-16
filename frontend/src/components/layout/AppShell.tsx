@@ -7,7 +7,7 @@ export function AppShell({ sidebar, topbar, children }: { sidebar: ReactNode; to
   const [open, setOpen] = useState(false)
   return (
     <div className="flex h-full">
-      {open && <div className="fixed inset-0 z-30 bg-neutral-900/40 lg:hidden" onClick={() => setOpen(false)} aria-hidden />}
+      {open && <div className="fixed inset-0 z-30 bg-overlay/40 lg:hidden" onClick={() => setOpen(false)} aria-hidden />}
       <aside
         className={cn(
           'fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-sidebar text-sidebar-fg transition-transform lg:static lg:translate-x-0',
@@ -37,7 +37,7 @@ export function AppShell({ sidebar, topbar, children }: { sidebar: ReactNode; to
 export function Logo() {
   return (
     <div className="flex items-center gap-2 px-4 py-4">
-      <span className="flex size-8 items-center justify-center rounded-md bg-accent-500 text-sm font-bold text-on-light">
+      <span className="flex size-8 items-center justify-center rounded-md bg-accent-solid text-sm font-bold text-on-accent-solid">
         PM
       </span>
       <span className="text-base font-semibold tracking-tight">ProjectM</span>

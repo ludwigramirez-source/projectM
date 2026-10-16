@@ -80,7 +80,7 @@ export function DashboardPage() {
             <Kpi icon={<ListTodo className="size-4" />} label="Tareas abiertas" value={data.openTasks} />
             <Kpi icon={<AlertTriangle className="size-4" />} label="Vencidas" value={data.overdueTasks} tone={data.overdueTasks ? 'danger' : 'neutral'} />
             <Kpi icon={<CheckCircle2 className="size-4" />} label="Completadas (7 días)" value={data.completedLast7Days} tone="success" />
-            <Kpi icon={<UserCheck className="size-4" />} label="Mis tareas abiertas" value={<Link to="/my-tasks" className="hover:text-primary-700">{data.myOpenTasks}</Link>} />
+            <Kpi icon={<UserCheck className="size-4" />} label="Mis tareas abiertas" value={<Link to="/my-tasks" className="hover:text-primary-fg">{data.myOpenTasks}</Link>} />
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">
@@ -105,9 +105,9 @@ export function DashboardPage() {
           <WorkloadCard rows={data.workload} />
 
           <div className="grid gap-4 lg:grid-cols-2">
-            <Card title={<span className="flex items-center gap-2"><AlertTriangle className="size-4 text-danger-500" /> Tareas vencidas</span>} bodyClassName="p-0">
+            <Card title={<span className="flex items-center gap-2"><AlertTriangle className="size-4 text-danger-fg" /> Tareas vencidas</span>} bodyClassName="p-0">
               {data.overdue.length === 0 ? (
-                <EmptyState icon={<CheckCircle2 className="size-7 text-success-700" />} title="Nada vencido" />
+                <EmptyState icon={<CheckCircle2 className="size-7 text-success-fg" />} title="Nada vencido" />
               ) : (
                 <ul className="divide-y divide-border">
                   {data.overdue.map((t) => (
@@ -119,7 +119,7 @@ export function DashboardPage() {
                           <span className="block truncate text-xs text-fg-muted">{t.projectName}</span>
                         </span>
                         <span className="text-right text-xs">
-                          <span className="block font-medium text-danger-500">{t.daysLate} {t.daysLate === 1 ? 'día' : 'días'} tarde</span>
+                          <span className="block font-medium text-danger-fg">{t.daysLate} {t.daysLate === 1 ? 'día' : 'días'} tarde</span>
                           <span className="text-fg-muted">{fmtShortDate(t.dueDate)}</span>
                         </span>
                       </Link>
@@ -181,7 +181,7 @@ function BarList({ rows, unit }: { rows: { label: string; value: number; tone: T
         {rows.map((r) => (
           <li key={r.label} className="grid grid-cols-[7rem_1fr_2.5rem] items-center gap-3 text-sm" {...bind(<><strong>{r.label}</strong>: {r.value} {unit} ({Math.round((r.value / total) * 100)}%)</>)}>
             <span className="truncate text-fg-muted">{r.label}</span>
-            <span className="h-3 rounded-r bg-neutral-100">
+            <span className="h-3 rounded-r bg-neutral-subtle">
               {r.value > 0 && <span className={cn('block h-full rounded-r', toneDot[r.tone])} style={{ width: `${(r.value / max) * 100}%`, minWidth: 4 }} />}
             </span>
             <span className="text-right font-medium tabular-nums">{r.value}</span>
@@ -224,7 +224,7 @@ function WorkloadCard({ rows }: { rows: Workload[] }) {
                 <tr key={r.name} className="border-b border-border last:border-0">
                   <td className="py-1.5 pr-3">{r.name}</td>
                   {LOAD.map((l) => <td key={l.key} className="px-3 py-1.5 text-right tabular-nums">{r[l.key] as number}</td>)}
-                  <td className={cn('px-3 py-1.5 text-right tabular-nums', r.overdue > 0 && 'font-medium text-danger-500')}>{r.overdue}</td>
+                  <td className={cn('px-3 py-1.5 text-right tabular-nums', r.overdue > 0 && 'font-medium text-danger-fg')}>{r.overdue}</td>
                   <td className="py-1.5 pl-3 text-right font-medium tabular-nums">{r.total}</td>
                 </tr>
               ))}
@@ -259,7 +259,7 @@ function WorkloadCard({ rows }: { rows: Workload[] }) {
                 </span>
                 <span className="text-right text-xs whitespace-nowrap tabular-nums">
                   <span className="font-medium">{r.total}</span>
-                  {r.overdue > 0 && <span className="ml-1.5 text-danger-500">({r.overdue} vencidas)</span>}
+                  {r.overdue > 0 && <span className="ml-1.5 text-danger-fg">({r.overdue} vencidas)</span>}
                 </span>
               </li>
             ))}

@@ -93,7 +93,7 @@ export function ProjectsPage() {
                     <div className="text-xs text-fg-muted">
                       {p.code} · {p.spaceName}
                     </div>
-                    <h3 className="truncate font-semibold group-hover:text-primary-700">{p.name}</h3>
+                    <h3 className="truncate font-semibold group-hover:text-primary-fg">{p.name}</h3>
                     {p.clientName && <div className="truncate text-xs text-fg-muted">{p.clientName}</div>}
                   </div>
                   <ProjectStatusBadge status={p.status} />
@@ -114,7 +114,7 @@ export function ProjectsPage() {
                   <span className="truncate text-xs">Gestor: {p.managerName}</span>
                   <div className="flex items-center gap-1.5">
                     {p.overdueTasks > 0 && p.status !== 'Cerrado' && (
-                      <span className="inline-flex items-center gap-1 text-xs font-medium text-danger-500">
+                      <span className="inline-flex items-center gap-1 text-xs font-medium text-danger-fg">
                         <AlertTriangle className="size-3.5" />
                         {p.overdueTasks}
                       </span>

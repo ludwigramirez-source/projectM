@@ -26,10 +26,10 @@ export function TrackingTab({ project }: { project: ProjectDetail }) {
   const { data: blockers } = useBlockers(project.id)
   return (
     <div className="grid gap-4 p-4 sm:p-6 xl:grid-cols-2">
-      <Card title={<span className="flex items-center gap-2"><OctagonX className="size-4 text-danger-500" /> Tareas bloqueadas ({blockers?.blockedTasks.length ?? 0})</span>}>
+      <Card title={<span className="flex items-center gap-2"><OctagonX className="size-4 text-danger-fg" /> Tareas bloqueadas ({blockers?.blockedTasks.length ?? 0})</span>}>
         <TaskRows tasks={blockers?.blockedTasks} empty="No hay tareas bloqueadas." showReason />
       </Card>
-      <Card title={<span className="flex items-center gap-2"><AlertTriangle className="size-4 text-danger-500" /> Tareas vencidas ({blockers?.overdueTasks.length ?? 0})</span>}>
+      <Card title={<span className="flex items-center gap-2"><AlertTriangle className="size-4 text-danger-fg" /> Tareas vencidas ({blockers?.overdueTasks.length ?? 0})</span>}>
         <TaskRows tasks={blockers?.overdueTasks} empty="No hay tareas vencidas." />
       </Card>
       <RisksCard project={project} />
@@ -40,7 +40,7 @@ export function TrackingTab({ project }: { project: ProjectDetail }) {
 
 function TaskRows({ tasks, empty, showReason }: { tasks?: TaskSummary[]; empty: string; showReason?: boolean }) {
   if (!tasks) return <PageLoader />
-  if (!tasks.length) return <p className="flex items-center gap-2 text-sm text-fg-muted"><CheckCircle2 className="size-4 text-success-700" /> {empty}</p>
+  if (!tasks.length) return <p className="flex items-center gap-2 text-sm text-fg-muted"><CheckCircle2 className="size-4 text-success-fg" /> {empty}</p>
   return (
     <ul className="divide-y divide-border">
       {tasks.map((t) => (
@@ -48,7 +48,7 @@ function TaskRows({ tasks, empty, showReason }: { tasks?: TaskSummary[]; empty: 
           <Avatar name={t.assigneeName} size="sm" />
           <div className="min-w-0 flex-1">
             <div className="truncate text-sm font-medium">{t.title}</div>
-            {showReason && t.blockedReason && <div className="text-xs text-danger-700">Motivo: {t.blockedReason}</div>}
+            {showReason && t.blockedReason && <div className="text-xs text-danger-fg">Motivo: {t.blockedReason}</div>}
             <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-fg-muted">
               <StatusBadge status={t.status} overdue={isOverdue(t.dueDate, t.status)} />
               <PriorityBadge priority={t.priority} />
@@ -101,7 +101,7 @@ function RisksCard({ project }: { project: ProjectDetail }) {
                     variant="ghost"
                     size="sm"
                     aria-label="Eliminar"
-                    icon={<Trash2 className="size-3.5 text-danger-500" />}
+                    icon={<Trash2 className="size-3.5 text-danger-fg" />}
                     onClick={() => confirm('¿Eliminar el riesgo?') && remove.mutate(r.id, { onError: (e) => toast.error(errorMessage(e)) })}
                   />
                 </div>
@@ -190,7 +190,7 @@ function MilestonesCard({ project }: { project: ProjectDetail }) {
               <li key={m.id} className="flex items-center gap-3 py-2">
                 <input
                   type="checkbox"
-                  className="size-4 accent-success-700"
+                  className="size-4 accent-success-solid"
                   checked={!!m.completedAt}
                   disabled={!can}
                   aria-label="Completado"
@@ -200,14 +200,14 @@ function MilestonesCard({ project }: { project: ProjectDetail }) {
                 />
                 <div className="min-w-0 flex-1">
                   <div className={cn('text-sm font-medium', m.completedAt && 'text-fg-muted line-through')}>{m.name}</div>
-                  <div className={cn('text-xs', late ? 'font-medium text-danger-500' : 'text-fg-muted')}>
+                  <div className={cn('text-xs', late ? 'font-medium text-danger-fg' : 'text-fg-muted')}>
                     {fmtDate(m.dueDate)} · {m.completedTasks}/{m.totalTasks} tareas
                   </div>
                 </div>
                 {can && (
                   <div className="flex gap-1">
                     <Button variant="ghost" size="sm" aria-label="Editar" icon={<Pencil className="size-3.5" />} onClick={() => setEditing(m)} />
-                    <Button variant="ghost" size="sm" aria-label="Eliminar" icon={<Trash2 className="size-3.5 text-danger-500" />} onClick={() => confirm('¿Eliminar el hito?') && remove.mutate(m.id)} />
+                    <Button variant="ghost" size="sm" aria-label="Eliminar" icon={<Trash2 className="size-3.5 text-danger-fg" />} onClick={() => confirm('¿Eliminar el hito?') && remove.mutate(m.id)} />
                   </div>
                 )}
               </li>

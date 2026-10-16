@@ -69,7 +69,7 @@ function Comments({ taskId, projectId, members, canComment }: { taskId: string; 
                   {c.canEdit && (
                     <div className="mt-1 flex gap-2 text-xs text-fg-muted opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
                       <button onClick={() => setEditing(c.id)} className="inline-flex items-center gap-1 hover:text-fg"><Pencil className="size-3" /> Editar</button>
-                      <button onClick={() => confirm('¿Eliminar el comentario?') && m.remove.mutate(c.id)} className="inline-flex items-center gap-1 hover:text-danger-500"><Trash2 className="size-3" /> Eliminar</button>
+                      <button onClick={() => confirm('¿Eliminar el comentario?') && m.remove.mutate(c.id)} className="inline-flex items-center gap-1 hover:text-danger-fg"><Trash2 className="size-3" /> Eliminar</button>
                     </div>
                   )}
                 </div>
@@ -98,7 +98,7 @@ function CommentBody({ comment, members }: { comment: Comment; members: MemberDt
   // Con un grupo de captura, split deja las menciones en las posiciones impares.
   const parts: ReactNode[] = comment.body.split(pattern).map((part, i) =>
     i % 2 === 1 ? (
-      <span key={i} className="rounded bg-primary-100 px-0.5 font-medium text-primary-800">{part}</span>
+      <span key={i} className="rounded bg-primary-subtle px-0.5 font-medium text-primary-fg">{part}</span>
     ) : (
       part
     ),
@@ -170,7 +170,7 @@ function Composer({
         aria-label="Escribe un comentario"
         rows={3}
         placeholder="Escribe un comentario… usa @ para mencionar"
-        className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm placeholder:text-fg-muted focus:border-primary-600 focus:ring-2 focus:ring-primary-200 focus:outline-none"
+        className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm placeholder:text-fg-muted focus:border-ring focus:ring-2 focus:ring-ring-soft focus:outline-none"
         value={body}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={(e) => {
@@ -187,7 +187,7 @@ function Composer({
         <ul role="listbox" aria-label="Mencionar" className="absolute bottom-full left-0 z-10 mb-1 w-64 overflow-hidden rounded-md border border-border bg-surface shadow-lg">
           {suggestions.map((m, i) => (
             <li key={m.userId} role="option" aria-selected={i === highlight}>
-              <button type="button" onMouseDown={(e) => (e.preventDefault(), pick(m))} className={cn('flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm', i === highlight && 'bg-primary-50')}>
+              <button type="button" onMouseDown={(e) => (e.preventDefault(), pick(m))} className={cn('flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm', i === highlight && 'bg-primary-subtle')}>
                 <Avatar name={m.fullName} size="sm" /> {m.fullName}
               </button>
             </li>
@@ -218,7 +218,7 @@ export function ActivityFeed({ items }: { items: { id: string; actorName: string
       {items.map((a) => (
         <li key={a.id} className="relative text-sm">
           <span className={cn('absolute top-1.5 -left-[21px] size-2.5 rounded-full border-2 border-surface',
-            a.type.includes('Closed') || a.type === 'TaskDeleted' ? 'bg-danger-500' : a.type.includes('Status') ? 'bg-accent-500' : 'bg-primary-500')} />
+            a.type.includes('Closed') || a.type === 'TaskDeleted' ? 'bg-danger-mark' : a.type.includes('Status') ? 'bg-accent-mark' : 'bg-primary-mark')} />
           <span className="font-medium">{a.actorName}</span> <span>{a.message}</span>
           <div className="text-xs text-fg-muted" title={fmtDateTime(a.createdAt)}>{fmtRelative(a.createdAt)}</div>
         </li>

@@ -12,15 +12,15 @@ interface ToastItem {
 const ToastCtx = createContext<(kind: ToastKind, message: string) => void>(() => {})
 
 const styles: Record<ToastKind, string> = {
-  success: 'border-success-500',
-  error: 'border-danger-500',
-  info: 'border-primary-500',
+  success: 'border-success-mark',
+  error: 'border-danger-mark',
+  info: 'border-primary-mark',
 }
 
 const icons: Record<ToastKind, ReactNode> = {
-  success: <CheckCircle2 className="size-4 shrink-0 text-success-700" />,
-  error: <AlertTriangle className="size-4 shrink-0 text-danger-500" />,
-  info: <Info className="size-4 shrink-0 text-primary-700" />,
+  success: <CheckCircle2 className="size-4 shrink-0 text-success-fg" />,
+  error: <AlertTriangle className="size-4 shrink-0 text-danger-fg" />,
+  info: <Info className="size-4 shrink-0 text-primary-fg" />,
 }
 
 export function ToastProvider({ children }: { children: ReactNode }) {

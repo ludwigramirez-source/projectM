@@ -113,7 +113,7 @@ export function CalendarView({ projectId, filters, canEdit, showProject }: { pro
         <div role="tablist" className="flex rounded-md border border-border p-0.5 text-sm">
           {(['mes', 'semana'] as Mode[]).map((m) => (
             <button key={m} role="tab" aria-selected={mode === m} onClick={() => setMode(m)}
-              className={cn('rounded px-3 py-1 capitalize', mode === m ? 'bg-primary-100 font-medium text-primary-800' : 'text-fg-muted')}>
+              className={cn('rounded px-3 py-1 capitalize', mode === m ? 'bg-primary-subtle font-medium text-primary-fg' : 'text-fg-muted')}>
               {m}
             </button>
           ))}
@@ -173,8 +173,8 @@ function DayCell({ date, iso, dim, tall, tasks, milestones, onOpen, canEdit, sho
   const { setNodeRef, isOver } = useDroppable({ id: iso })
   const max = tall ? 50 : 4
   return (
-    <div ref={setNodeRef} className={cn('border-r border-b border-border p-1 [&:nth-child(7n)]:border-r-0', tall ? 'min-h-96' : 'min-h-28', dim && 'bg-surface-muted/60', isOver && 'bg-primary-50')}>
-      <div className={cn('mb-1 flex size-6 items-center justify-center rounded-full text-xs', isToday(date) ? 'bg-primary-700 font-semibold text-white' : dim ? 'text-fg-muted' : '')}>
+    <div ref={setNodeRef} className={cn('border-r border-b border-border p-1 [&:nth-child(7n)]:border-r-0', tall ? 'min-h-96' : 'min-h-28', dim && 'bg-surface-muted/60', isOver && 'bg-primary-subtle')}>
+      <div className={cn('mb-1 flex size-6 items-center justify-center rounded-full text-xs', isToday(date) ? 'bg-primary-solid font-semibold text-on-primary-solid' : dim ? 'text-fg-muted' : '')}>
         {format(date, 'd')}
       </div>
       <div className="space-y-1">

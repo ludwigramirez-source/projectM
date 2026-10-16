@@ -78,10 +78,10 @@ function ClosureInProgress({ project, closure }: { project: ProjectDetail; closu
         <Card title={<span className="flex items-center gap-2"><ClipboardCheck className="size-4" /> Checklist de cierre</span>} actions={<span className="text-xs text-fg-muted">{requiredDone}/{requiredTotal} obligatorios</span>}>
           <ul className="space-y-2">
             {closure.checklist.map((i) => (
-              <li key={i.id} className={cn('flex items-start gap-3 rounded-md border p-2.5', i.isDone ? 'border-success-200 bg-success-50' : 'border-border')}>
+              <li key={i.id} className={cn('flex items-start gap-3 rounded-md border p-2.5', i.isDone ? 'border-success-line bg-success-subtle' : 'border-border')}>
                 <input
                   type="checkbox"
-                  className="mt-0.5 size-4 accent-success-700"
+                  className="mt-0.5 size-4 accent-success-solid"
                   checked={i.isDone}
                   disabled={!can || m.check.isPending}
                   aria-label={i.text}
@@ -110,10 +110,10 @@ function ClosureInProgress({ project, closure }: { project: ProjectDetail; closu
               <ul className="space-y-1">
                 {deliverables.map((d, idx) => (
                   <li key={idx} className="flex items-center gap-2 rounded-md bg-surface-muted px-2 py-1 text-sm">
-                    <CheckCircle2 className="size-4 shrink-0 text-success-700" />
+                    <CheckCircle2 className="size-4 shrink-0 text-success-fg" />
                     <span className="flex-1">{d}</span>
                     {can && (
-                      <button onClick={() => setDeliverables(deliverables.filter((_, i) => i !== idx))} aria-label="Quitar entregable" className="text-fg-muted hover:text-danger-500">
+                      <button onClick={() => setDeliverables(deliverables.filter((_, i) => i !== idx))} aria-label="Quitar entregable" className="text-fg-muted hover:text-danger-fg">
                         <X className="size-3.5" />
                       </button>
                     )}
@@ -159,7 +159,7 @@ function ClosureInProgress({ project, closure }: { project: ProjectDetail; closu
                     <div key={idx} className="grid gap-2 rounded-md border border-border p-3 sm:grid-cols-2">
                       <div className="flex items-end gap-2 sm:col-span-2">
                         <Input label="Categoría" value={l.category} disabled={!can} wrapperClassName="flex-1" onChange={(e) => set({ category: e.target.value })} />
-                        {can && <Button variant="ghost" aria-label="Quitar lección" icon={<Trash2 className="size-4 text-danger-500" />} onClick={() => setLessons(lessons.filter((_, i) => i !== idx))} />}
+                        {can && <Button variant="ghost" aria-label="Quitar lección" icon={<Trash2 className="size-4 text-danger-fg" />} onClick={() => setLessons(lessons.filter((_, i) => i !== idx))} />}
                       </div>
                       <Textarea label="Qué funcionó bien" value={l.whatWentWell ?? ''} disabled={!can} onChange={(e) => set({ whatWentWell: e.target.value })} />
                       <Textarea label="Qué mejorar" value={l.whatToImprove ?? ''} disabled={!can} onChange={(e) => set({ whatToImprove: e.target.value })} />
@@ -177,13 +177,13 @@ function ClosureInProgress({ project, closure }: { project: ProjectDetail; closu
         <MetricsCard closure={closure} />
         <Card title="Validación">
           {closure.problems.length === 0 ? (
-            <p className="flex items-center gap-2 text-sm text-success-800">
+            <p className="flex items-center gap-2 text-sm text-success-fg">
               <CheckCircle2 className="size-4" /> Todo listo para cerrar.
             </p>
           ) : (
             <ul className="space-y-2">
               {closure.problems.map((p) => (
-                <li key={p.code} className="flex items-start gap-2 text-sm text-danger-700">
+                <li key={p.code} className="flex items-start gap-2 text-sm text-danger-fg">
                   <AlertTriangle className="mt-0.5 size-4 shrink-0" /> {p.message}
                 </li>
               ))}
@@ -244,13 +244,13 @@ function CloseModal({ project, closure, onClose }: { project: ProjectDetail; clo
     >
       <div className="space-y-3 text-sm">
         {blocking.length > 0 && (
-          <div className="rounded-md bg-danger-50 p-3 text-danger-700">
+          <div className="rounded-md bg-danger-subtle p-3 text-danger-subtle-fg">
             Resuelve primero: {blocking.map((b) => b.message).join(' ')}
           </div>
         )}
         {open > 0 ? (
           <>
-            <div className="flex items-start gap-2 rounded-md bg-danger-50 p-3 text-danger-700">
+            <div className="flex items-start gap-2 rounded-md bg-danger-subtle p-3 text-danger-subtle-fg">
               <AlertTriangle className="mt-0.5 size-4 shrink-0" />
               <span>
                 Quedan <strong>{open}</strong> tarea(s) abierta(s). Puedes forzar el cierre con una justificación; quedará registrada en el acta y en el historial.
@@ -286,14 +286,14 @@ function MetricsCard({ closure }: { closure: Closure }) {
       </div>
       <dl className="space-y-1.5 text-sm">
         <div className="flex justify-between"><dt className="text-fg-muted">Tareas completadas</dt><dd className="font-medium">{closure.metrics.completedTasks}/{closure.metrics.totalTasks}</dd></div>
-        <div className="flex justify-between"><dt className="text-fg-muted">Tareas abiertas</dt><dd className={cn('font-medium', closure.metrics.openTasks > 0 && 'text-danger-500')}>{closure.metrics.openTasks}</dd></div>
+        <div className="flex justify-between"><dt className="text-fg-muted">Tareas abiertas</dt><dd className={cn('font-medium', closure.metrics.openTasks > 0 && 'text-danger-fg')}>{closure.metrics.openTasks}</dd></div>
         <div className="flex justify-between"><dt className="text-fg-muted">Inicio plan / real</dt><dd className="text-right">{fmtDate(closure.plannedStart)} / {fmtDate(closure.actualStart)}</dd></div>
         <div className="flex justify-between"><dt className="text-fg-muted">Fin plan / real</dt><dd className="text-right">{fmtDate(closure.plannedEnd)} / {fmtDate(closure.actualEnd)}</dd></div>
         <div className="flex justify-between"><dt className="text-fg-muted">Duración plan / real</dt><dd>{planned} / {actual ?? '—'} días</dd></div>
         {deviation != null && (
           <div className="flex justify-between">
             <dt className="text-fg-muted">Desviación</dt>
-            <dd className={cn('font-medium', deviation > 0 ? 'text-danger-500' : 'text-success-700')}>
+            <dd className={cn('font-medium', deviation > 0 ? 'text-danger-fg' : 'text-success-fg')}>
               {deviation > 0 ? `+${deviation} días` : deviation === 0 ? 'En fecha' : `${deviation} días`}
             </dd>
           </div>
@@ -321,7 +321,7 @@ function ClosureRecord({ project, closure }: { project: ProjectDetail; closure: 
             {project.clientName && ` · Cliente: ${project.clientName}`}
           </div>
           {closure.isForced && (
-            <div className="mt-3 rounded-md bg-danger-50 p-3 text-sm text-danger-700">
+            <div className="mt-3 rounded-md bg-danger-subtle p-3 text-sm text-danger-subtle-fg">
               <strong>Cierre forzado</strong> con {closure.metrics.openTasks} tarea(s) abierta(s). Justificación: {closure.forceJustification}
             </div>
           )}
@@ -340,7 +340,7 @@ function ClosureRecord({ project, closure }: { project: ProjectDetail; closure: 
           <ul className="space-y-1 text-sm">
             {closure.deliverables.map((d, i) => (
               <li key={i} className="flex items-center gap-2">
-                <CheckCircle2 className="size-4 text-success-700" /> {d}
+                <CheckCircle2 className="size-4 text-success-fg" /> {d}
               </li>
             ))}
           </ul>
@@ -350,7 +350,7 @@ function ClosureRecord({ project, closure }: { project: ProjectDetail; closure: 
         <ul className="space-y-1 text-sm">
           {closure.checklist.map((i) => (
             <li key={i.id} className="flex items-center gap-2">
-              {i.isDone ? <CheckCircle2 className="size-4 text-success-700" /> : <X className="size-4 text-fg-muted" />}
+              {i.isDone ? <CheckCircle2 className="size-4 text-success-fg" /> : <X className="size-4 text-fg-muted" />}
               {i.text}
               {i.doneByName && <span className="text-xs text-fg-muted">— {i.doneByName}</span>}
             </li>

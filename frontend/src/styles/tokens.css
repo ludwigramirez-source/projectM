@@ -90,10 +90,67 @@
   --pm-sidebar-fg-muted: var(--pm-secondary-100);
   --pm-sidebar-active: var(--pm-secondary-700);
   --pm-on-light: var(--pm-neutral-900); /* texto sobre primary/accent/success 500 */
+  --pm-track: var(--pm-neutral-200);
+  --pm-overlay: var(--pm-neutral-950);
+  --pm-ring-soft: var(--pm-primary-200);
+
+  /*
+   * Tonos semánticos (lo que usan los componentes): subtle = fondo tenue, subtle-fg = texto
+   * sobre subtle, fg = texto del tono sobre surface, solid/on-solid = botones y rellenos,
+   * mark = barras/puntos/bordes, line = bordes suaves. Cambian con el tema.
+   */
+  --pm-primary-subtle: var(--pm-primary-100);
+  --pm-primary-subtle-fg: var(--pm-primary-800);
+  --pm-primary-fg: var(--pm-primary-800);
+  --pm-primary-solid: var(--pm-primary-700);
+  --pm-primary-solid-hover: var(--pm-primary-800);
+  --pm-on-primary-solid: var(--pm-white);
+  --pm-primary-mark: var(--pm-primary-500);
+  --pm-primary-line: var(--pm-primary-200);
+  --pm-secondary-subtle: var(--pm-secondary-100);
+  --pm-secondary-subtle-fg: var(--pm-secondary-800);
+  --pm-secondary-fg: var(--pm-secondary-700);
+  --pm-secondary-solid: var(--pm-secondary-700);
+  --pm-secondary-solid-hover: var(--pm-secondary-800);
+  --pm-on-secondary-solid: var(--pm-white);
+  --pm-secondary-mark: var(--pm-secondary-500);
+  --pm-secondary-line: var(--pm-secondary-200);
+  --pm-accent-subtle: var(--pm-accent-100);
+  --pm-accent-subtle-fg: var(--pm-accent-900);
+  --pm-accent-fg: var(--pm-accent-800);
+  --pm-accent-solid: var(--pm-accent-500);
+  --pm-accent-solid-hover: var(--pm-accent-600);
+  --pm-on-accent-solid: var(--pm-neutral-900);
+  --pm-accent-mark: var(--pm-accent-500);
+  --pm-accent-line: var(--pm-accent-200);
+  --pm-success-subtle: var(--pm-success-100);
+  --pm-success-subtle-fg: var(--pm-success-800);
+  --pm-success-fg: var(--pm-success-700);
+  --pm-success-solid: var(--pm-success-700);
+  --pm-success-solid-hover: var(--pm-success-800);
+  --pm-on-success-solid: var(--pm-white);
+  --pm-success-mark: var(--pm-success-500);
+  --pm-success-line: var(--pm-success-200);
+  --pm-danger-subtle: var(--pm-danger-50);
+  --pm-danger-subtle-fg: var(--pm-danger-700);
+  --pm-danger-fg: var(--pm-danger-500);
+  --pm-danger-solid: var(--pm-danger-500);
+  --pm-danger-solid-hover: var(--pm-danger-600);
+  --pm-on-danger-solid: var(--pm-white);
+  --pm-danger-mark: var(--pm-danger-500);
+  --pm-danger-line: var(--pm-danger-200);
+  --pm-neutral-subtle: var(--pm-neutral-100);
+  --pm-neutral-subtle-fg: var(--pm-neutral-700);
+  --pm-neutral-fg: var(--pm-neutral-600);
+  --pm-neutral-solid: var(--pm-neutral-600);
+  --pm-neutral-solid-hover: var(--pm-neutral-700);
+  --pm-on-neutral-solid: var(--pm-white);
+  --pm-neutral-mark: var(--pm-neutral-400);
+  --pm-neutral-line: var(--pm-neutral-200);
   color-scheme: light;
 }
 
-/* ---- Semánticos: modo oscuro (preparado; sin selector de tema en v1) ---- */
+/* ---- Semánticos: modo oscuro (valores validados en tokens.contrast.test.ts) ---- */
 [data-theme='dark'] {
   --pm-bg: var(--pm-neutral-950);
   --pm-surface: var(--pm-neutral-900);
@@ -107,5 +164,57 @@
   --pm-sidebar-fg: var(--pm-neutral-50);
   --pm-sidebar-fg-muted: var(--pm-neutral-300);
   --pm-sidebar-active: var(--pm-secondary-800);
+  --pm-on-light: var(--pm-neutral-900);
+  --pm-track: var(--pm-neutral-700);
+  --pm-overlay: var(--pm-neutral-950);
+  --pm-ring-soft: var(--pm-primary-800);
+  --pm-primary-subtle: 43 65 86;
+  --pm-primary-subtle-fg: var(--pm-primary-200);
+  --pm-primary-fg: var(--pm-primary-300);
+  --pm-primary-solid: var(--pm-primary-500);
+  --pm-primary-solid-hover: var(--pm-primary-400);
+  --pm-on-primary-solid: var(--pm-neutral-900);
+  --pm-primary-mark: var(--pm-primary-500);
+  --pm-primary-line: var(--pm-primary-700);
+  --pm-secondary-subtle: 47 53 74;
+  --pm-secondary-subtle-fg: var(--pm-secondary-200);
+  --pm-secondary-fg: var(--pm-secondary-300);
+  --pm-secondary-solid: var(--pm-secondary-600);
+  --pm-secondary-solid-hover: var(--pm-secondary-700);
+  --pm-on-secondary-solid: var(--pm-white);
+  --pm-secondary-mark: var(--pm-secondary-400);
+  --pm-secondary-line: var(--pm-secondary-600);
+  --pm-accent-subtle: 38 80 80;
+  --pm-accent-subtle-fg: var(--pm-accent-200);
+  --pm-accent-fg: var(--pm-accent-300);
+  --pm-accent-solid: var(--pm-accent-500);
+  --pm-accent-solid-hover: var(--pm-accent-400);
+  --pm-on-accent-solid: var(--pm-neutral-900);
+  --pm-accent-mark: var(--pm-accent-500);
+  --pm-accent-line: var(--pm-accent-700);
+  --pm-success-subtle: 45 72 77;
+  --pm-success-subtle-fg: var(--pm-success-200);
+  --pm-success-fg: var(--pm-success-300);
+  --pm-success-solid: var(--pm-success-500);
+  --pm-success-solid-hover: var(--pm-success-400);
+  --pm-on-success-solid: var(--pm-neutral-900);
+  --pm-success-mark: var(--pm-success-500);
+  --pm-success-line: var(--pm-success-700);
+  --pm-danger-subtle: 76 24 37;
+  --pm-danger-subtle-fg: var(--pm-danger-200);
+  --pm-danger-fg: var(--pm-danger-300);
+  --pm-danger-solid: var(--pm-danger-400);
+  --pm-danger-solid-hover: var(--pm-danger-500);
+  --pm-on-danger-solid: var(--pm-white);
+  --pm-danger-mark: var(--pm-danger-300);
+  --pm-danger-line: var(--pm-danger-600);
+  --pm-neutral-subtle: 49 54 72;
+  --pm-neutral-subtle-fg: var(--pm-neutral-200);
+  --pm-neutral-fg: var(--pm-neutral-300);
+  --pm-neutral-solid: var(--pm-neutral-600);
+  --pm-neutral-solid-hover: var(--pm-neutral-700);
+  --pm-on-neutral-solid: var(--pm-white);
+  --pm-neutral-mark: var(--pm-neutral-400);
+  --pm-neutral-line: var(--pm-neutral-700);
   color-scheme: dark;
 }

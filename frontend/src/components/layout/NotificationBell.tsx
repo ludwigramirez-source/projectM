@@ -48,7 +48,7 @@ export function NotificationBell() {
       >
         <Bell className="size-5" />
         {count > 0 && (
-          <span className="absolute top-1 right-1 flex min-w-4 items-center justify-center rounded-full bg-danger-500 px-1 text-[10px] font-bold text-white">
+          <span className="absolute top-1 right-1 flex min-w-4 items-center justify-center rounded-full bg-danger-mark px-1 text-[10px] font-bold text-white">
             {count > 99 ? '99+' : count}
           </span>
         )}
@@ -58,14 +58,14 @@ export function NotificationBell() {
           <header className="flex items-center justify-between border-b border-border px-4 py-2.5">
             <h2 className="text-sm font-semibold">Notificaciones</h2>
             {count > 0 && (
-              <button onClick={() => readAll.mutate()} className="inline-flex items-center gap-1 text-xs text-primary-700 hover:underline">
+              <button onClick={() => readAll.mutate()} className="inline-flex items-center gap-1 text-xs text-primary-fg hover:underline">
                 <CheckCheck className="size-3.5" /> Marcar todas como leídas
               </button>
             )}
           </header>
           <div className="max-h-[70vh] overflow-y-auto">
             {isLoading ? (
-              <div className="flex justify-center p-6 text-primary-700"><Spinner /></div>
+              <div className="flex justify-center p-6 text-primary-fg"><Spinner /></div>
             ) : !data?.items.length ? (
               <p className="p-6 text-center text-sm text-fg-muted">No tienes notificaciones.</p>
             ) : (
@@ -74,8 +74,8 @@ export function NotificationBell() {
                   const Icon = icons[n.type] ?? Bell
                   return (
                     <li key={n.id}>
-                      <button onClick={() => go(n)} className={cn('flex w-full gap-3 px-4 py-3 text-left hover:bg-surface-muted', !n.readAt && 'bg-primary-50')}>
-                        <span className={cn('mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full', n.type === 'TaskOverdue' ? 'bg-danger-50 text-danger-700' : 'bg-primary-100 text-primary-800')}>
+                      <button onClick={() => go(n)} className={cn('flex w-full gap-3 px-4 py-3 text-left hover:bg-surface-muted', !n.readAt && 'bg-primary-subtle')}>
+                        <span className={cn('mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full', n.type === 'TaskOverdue' ? 'bg-danger-subtle text-danger-subtle-fg' : 'bg-primary-subtle text-primary-subtle-fg')}>
                           <Icon className="size-3.5" />
                         </span>
                         <span className="min-w-0 flex-1">
@@ -83,7 +83,7 @@ export function NotificationBell() {
                           {n.body && <span className="block truncate text-xs text-fg-muted">{n.body}</span>}
                           <span className="block text-xs text-fg-muted">{fmtRelative(n.createdAt)}</span>
                         </span>
-                        {!n.readAt && <span className="mt-2 size-2 shrink-0 rounded-full bg-primary-600" aria-label="Sin leer" />}
+                        {!n.readAt && <span className="mt-2 size-2 shrink-0 rounded-full bg-primary-mark" aria-label="Sin leer" />}
                       </button>
                     </li>
                   )

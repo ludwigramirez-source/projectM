@@ -163,13 +163,13 @@ function Column({ project, status, ids, byId, can, listId }: { project: ProjectD
           </button>
         )}
       </header>
-      <div ref={setNodeRef} className={cn('flex min-h-24 flex-1 flex-col gap-2 px-2 pb-2 transition-colors', isOver && 'bg-primary-50')}>
+      <div ref={setNodeRef} className={cn('flex min-h-24 flex-1 flex-col gap-2 px-2 pb-2 transition-colors', isOver && 'bg-primary-subtle')}>
         {adding && (
           <input
             autoFocus
             aria-label="Título de la nueva tarea"
             placeholder="Título y Enter"
-            className="rounded-md border border-primary-500 bg-surface px-2 py-2 text-sm focus:outline-none"
+            className="rounded-md border border-primary-mark bg-surface px-2 py-2 text-sm focus:outline-none"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onBlur={() => !title && setAdding(false)}
@@ -217,7 +217,7 @@ function Card({ task, dragging }: { task: TaskItem; dragging?: boolean }) {
       className={cn(
         'cursor-pointer rounded-md border border-border bg-surface p-3 text-sm shadow-sm hover:border-border-strong',
         dragging && 'rotate-2 shadow-lg',
-        task.isOverdue && 'border-l-4 border-l-danger-500',
+        task.isOverdue && 'border-l-4 border-l-danger-mark',
       )}
     >
       {task.tags.length > 0 && (
@@ -230,7 +230,7 @@ function Card({ task, dragging }: { task: TaskItem; dragging?: boolean }) {
       <div className="mt-2 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-xs text-fg-muted">
           {task.dueDate && (
-            <span className={cn('inline-flex items-center gap-1', task.isOverdue && 'font-medium text-danger-500')}>
+            <span className={cn('inline-flex items-center gap-1', task.isOverdue && 'font-medium text-danger-fg')}>
               <CalendarDays className="size-3.5" />
               {fmtShortDate(task.dueDate)}
             </span>

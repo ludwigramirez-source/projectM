@@ -69,7 +69,7 @@ export function TeamTab({ project }: { project: ProjectDetail }) {
                   variant="ghost"
                   size="sm"
                   aria-label={`Quitar a ${m.fullName}`}
-                  icon={<UserMinus className="size-4 text-danger-500" />}
+                  icon={<UserMinus className="size-4 text-danger-fg" />}
                   onClick={() => confirm(`¿Quitar a ${m.fullName} del proyecto?`) && remove.mutate(m.userId, { onError: (e) => toast.error(errorMessage(e)) })}
                 />
               )}

@@ -32,7 +32,7 @@ export function TaskToolbar({ project }: { project: ProjectDetail }) {
             onClick={() => set({ view: v.value === 'lista' ? null : v.value })}
             className={cn(
               'inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-sm',
-              view === v.value ? 'bg-primary-100 font-medium text-primary-800' : 'text-fg-muted hover:text-fg',
+              view === v.value ? 'bg-primary-subtle font-medium text-primary-fg' : 'text-fg-muted hover:text-fg',
             )}
           >
             <v.icon className="size-4" /> <span className="hidden sm:inline">{v.label}</span>
@@ -68,7 +68,7 @@ export function TaskToolbar({ project }: { project: ProjectDetail }) {
         {tags?.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
       </Select>
       <label className="inline-flex items-center gap-1.5 text-sm">
-        <input type="checkbox" className="size-4 accent-danger-500" checked={!!filters.overdue} onChange={(e) => set({ overdue: e.target.checked ? '1' : null })} />
+        <input type="checkbox" className="size-4 accent-danger-solid" checked={!!filters.overdue} onChange={(e) => set({ overdue: e.target.checked ? '1' : null })} />
         Vencidas
       </label>
       {view === 'lista' && (

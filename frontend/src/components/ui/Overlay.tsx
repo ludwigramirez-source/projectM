@@ -26,7 +26,7 @@ export function Modal({ open, onClose, title, children, footer, size = 'md' }: O
   if (!open) return null
   const w = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-3xl' }[size]
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-neutral-900/50 p-4 sm:pt-16">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-overlay/50 p-4 sm:pt-16">
       <div className="fixed inset-0" onClick={onClose} aria-hidden />
       <div
         role="dialog"
@@ -56,7 +56,7 @@ export function Drawer({ open, onClose, title, children, footer }: OverlayProps)
   useEscape(onClose, open)
   if (!open) return null
   return createPortal(
-    <div className="fixed inset-0 z-40 flex justify-end bg-neutral-900/30">
+    <div className="fixed inset-0 z-40 flex justify-end bg-overlay/30">
       <div className="fixed inset-0" onClick={onClose} aria-hidden />
       <aside role="dialog" aria-modal="true" className="relative flex h-full w-full max-w-2xl flex-col bg-surface shadow-2xl">
         <header className="flex items-center justify-between gap-2 border-b border-border px-5 py-3">

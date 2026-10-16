@@ -20,4 +20,14 @@ describe('reglas del sistema de diseño', () => {
       .filter((f) => /#[0-9a-fA-F]{3,8}\b(?![\w-])|rgba?\(\s*\d/.test(readFileSync(f, 'utf8')))
     expect(offenders).toEqual([])
   })
+
+  it('los componentes usan tonos semánticos (no escalas numéricas que no cambian con el tema)', () => {
+    // Las escalas 50–900 solo se permiten en el catálogo visual de la paleta.
+    const scale =
+      /\b(?:bg|text|border|ring|outline|fill|stroke|accent|from|to|via|divide)(?:-[a-z]+)?-(?:primary|secondary|accent|success|danger|neutral)-\d{2,3}\b/
+    const offenders = walk(SRC)
+      .filter((f) => !f.endsWith('index.css') && !f.endsWith('DesignSystemPage.tsx'))
+      .filter((f) => scale.test(readFileSync(f, 'utf8')))
+    expect(offenders).toEqual([])
+  })
 })

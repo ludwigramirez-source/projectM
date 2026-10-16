@@ -8,10 +8,10 @@ import { TASK_STATUSES, taskStatusMeta, toneDot } from '@/lib/status'
 
 export function Kpi({ icon, label, value, tone = 'neutral', hint }: { icon: ReactNode; label: string; value: ReactNode; tone?: 'neutral' | 'danger' | 'success' | 'primary'; hint?: ReactNode }) {
   const tones = {
-    neutral: 'bg-secondary-100 text-secondary-800',
-    danger: 'bg-danger-50 text-danger-700',
-    success: 'bg-success-100 text-success-800',
-    primary: 'bg-primary-100 text-primary-800',
+    neutral: 'bg-secondary-subtle text-secondary-subtle-fg',
+    danger: 'bg-danger-subtle text-danger-subtle-fg',
+    success: 'bg-success-subtle text-success-subtle-fg',
+    primary: 'bg-primary-subtle text-primary-subtle-fg',
   }
   return (
     <div className="flex items-center gap-3 rounded-lg border border-border bg-surface p-3">
@@ -107,8 +107,8 @@ export function OverviewTab({ project }: { project: ProjectDetail }) {
                 return (
                   <li key={m.id}>
                     <div className="flex items-center justify-between gap-2 text-sm">
-                      <span className={cn('font-medium', m.completedAt && 'text-success-700')}>{m.name}</span>
-                      <span className={cn('text-xs', m.isOverdue ? 'font-medium text-danger-500' : 'text-fg-muted')}>
+                      <span className={cn('font-medium', m.completedAt && 'text-success-fg')}>{m.name}</span>
+                      <span className={cn('text-xs', m.isOverdue ? 'font-medium text-danger-fg' : 'text-fg-muted')}>
                         {m.completedAt ? 'Completado' : fmtDate(m.dueDate)}
                       </span>
                     </div>

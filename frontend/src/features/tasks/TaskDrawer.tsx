@@ -51,9 +51,9 @@ export function TaskDrawer() {
       title={
         task ? (
           <nav className="flex min-w-0 items-center gap-1 text-xs text-fg-muted">
-            <Link to={`/projects/${task.projectId}`} className="truncate hover:text-primary-700">{task.projectName}</Link>
+            <Link to={`/projects/${task.projectId}`} className="truncate hover:text-primary-fg">{task.projectName}</Link>
             <ChevronRight className="size-3 shrink-0" />
-            <Link to={`/projects/${task.projectId}/tareas?list=${task.listId}`} className="truncate hover:text-primary-700">{task.listName}</Link>
+            <Link to={`/projects/${task.projectId}/tareas?list=${task.listId}`} className="truncate hover:text-primary-fg">{task.listName}</Link>
             {task.parentTaskId && (
               <>
                 <ChevronRight className="size-3 shrink-0" />
@@ -73,7 +73,7 @@ export function TaskDrawer() {
 
 function ParentLink({ id, title }: { id: string; title?: string | null }) {
   const { open } = useTaskDrawer()
-  return <button onClick={() => open(id)} className="truncate hover:text-primary-700">{title}</button>
+  return <button onClick={() => open(id)} className="truncate hover:text-primary-fg">{title}</button>
 }
 
 function TaskBody({ task }: { task: TaskDetail }) {
@@ -112,7 +112,7 @@ function TaskBody({ task }: { task: TaskDetail }) {
       <div>
         <textarea
           aria-label="Título"
-          className="w-full resize-none rounded-md border border-transparent bg-transparent px-1 text-xl font-semibold hover:border-border focus:border-primary-600 focus:outline-none disabled:hover:border-transparent"
+          className="w-full resize-none rounded-md border border-transparent bg-transparent px-1 text-xl font-semibold hover:border-border focus:border-ring focus:outline-none disabled:hover:border-transparent"
           rows={Math.min(3, Math.ceil(title.length / 50) || 1)}
           value={title}
           disabled={!can}
@@ -122,7 +122,7 @@ function TaskBody({ task }: { task: TaskDetail }) {
         />
         <div className="mt-1 flex flex-wrap items-center gap-2 px-1">
           <StatusBadge status={task.status} overdue={task.isOverdue} />
-          {task.status === 'Bloqueada' && task.blockedReason && <span className="text-xs text-danger-700">Motivo: {task.blockedReason}</span>}
+          {task.status === 'Bloqueada' && task.blockedReason && <span className="text-xs text-danger-fg">Motivo: {task.blockedReason}</span>}
           {task.completedAt && <span className="text-xs text-fg-muted">Completada el {fmtDateTime(task.completedAt)}</span>}
         </div>
       </div>
@@ -163,7 +163,7 @@ function TaskBody({ task }: { task: TaskDetail }) {
             type="date"
             value={task.dueDate ?? ''}
             disabled={!can}
-            className={cn(task.isOverdue && 'border-danger-500 text-danger-700')}
+            className={cn(task.isOverdue && 'border-danger-mark text-danger-fg')}
             onChange={(e) => save({ dueDate: e.target.value || null })}
           />
         </Prop>
@@ -215,7 +215,7 @@ function TaskBody({ task }: { task: TaskDetail }) {
           <Button
             size="sm"
             variant="ghost"
-            icon={<Trash2 className="size-3.5 text-danger-500" />}
+            icon={<Trash2 className="size-3.5 text-danger-fg" />}
             onClick={() =>
               confirm('¿Eliminar la tarea y sus subtareas?') &&
               m.remove.mutate(task.id, { onSuccess: () => { toast.success('Tarea eliminada'); close() }, onError })
@@ -363,13 +363,13 @@ function Subtasks({ task, can, onError }: { task: TaskDetail; can: boolean; onEr
           <li key={s.id} className="flex items-center gap-2 px-3 py-2">
             <input
               type="checkbox"
-              className="size-4 accent-success-700"
+              className="size-4 accent-success-solid"
               aria-label={`Completar ${s.title}`}
               checked={s.status === 'Completada'}
               disabled={!can}
               onChange={(e) => m.status.mutate({ id: s.id, status: e.target.checked ? 'Completada' : 'Pendiente' }, { onError })}
             />
-            <button onClick={() => open(s.id)} className={cn('flex-1 truncate text-left text-sm hover:text-primary-700', s.status === 'Completada' && 'text-fg-muted line-through')}>
+            <button onClick={() => open(s.id)} className={cn('flex-1 truncate text-left text-sm hover:text-primary-fg', s.status === 'Completada' && 'text-fg-muted line-through')}>
               {s.title}
             </button>
             <Avatar name={s.assigneeName} size="sm" />
@@ -435,7 +435,7 @@ function Attachments({ task, can, onError }: { task: TaskDetail; can: boolean; o
               </div>
               <Button size="sm" variant="ghost" aria-label="Descargar" icon={<Download className="size-4" />} onClick={() => downloadAttachment(a).catch((e) => toast.error(e.message))} />
               {can && (
-                <Button size="sm" variant="ghost" aria-label="Eliminar adjunto" icon={<Trash2 className="size-4 text-danger-500" />}
+                <Button size="sm" variant="ghost" aria-label="Eliminar adjunto" icon={<Trash2 className="size-4 text-danger-fg" />}
                   onClick={() => confirm(`¿Eliminar ${a.fileName}?`) && m.removeAttachment.mutate({ id: a.id, taskId: task.id }, { onError })} />
               )}
             </li>

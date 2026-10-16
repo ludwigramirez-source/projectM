@@ -9,7 +9,7 @@ import { cn } from '@/lib/cn'
 
 const control =
   'w-full rounded-md border bg-surface px-3 text-sm text-fg placeholder:text-fg-muted ' +
-  'transition-colors focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-200 ' +
+  'transition-colors focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring-soft ' +
   'disabled:bg-surface-muted disabled:text-fg-muted'
 
 interface FieldShellProps {
@@ -29,12 +29,12 @@ function FieldShell({ label, error, hint, required, children, className }: Field
       {label && (
         <label htmlFor={id} className="text-xs font-medium text-fg">
           {label}
-          {required && <span className="ml-0.5 text-danger-500">*</span>}
+          {required && <span className="ml-0.5 text-danger-fg">*</span>}
         </label>
       )}
       {children(id, descId)}
       {(error || hint) && (
-        <p id={descId} className={cn('text-xs', error ? 'text-danger-500' : 'text-fg-muted')}>
+        <p id={descId} className={cn('text-xs', error ? 'text-danger-fg' : 'text-fg-muted')}>
           {error ?? hint}
         </p>
       )}
@@ -61,7 +61,7 @@ export function Input({
           aria-invalid={!!error}
           aria-describedby={desc}
           required={required}
-          className={cn(control, 'h-9', error ? 'border-danger-500' : 'border-border', className)}
+          className={cn(control, 'h-9', error ? 'border-danger-mark' : 'border-border', className)}
           {...rest}
         />
       )}
@@ -86,7 +86,7 @@ export function Textarea({
           aria-invalid={!!error}
           aria-describedby={desc}
           required={required}
-          className={cn(control, 'min-h-20 py-2', error ? 'border-danger-500' : 'border-border', className)}
+          className={cn(control, 'min-h-20 py-2', error ? 'border-danger-mark' : 'border-border', className)}
           {...rest}
         />
       )}
@@ -112,7 +112,7 @@ export function Select({
           aria-invalid={!!error}
           aria-describedby={desc}
           required={required}
-          className={cn(control, 'h-9 pr-8', error ? 'border-danger-500' : 'border-border', className)}
+          className={cn(control, 'h-9 pr-8', error ? 'border-danger-mark' : 'border-border', className)}
           {...rest}
         >
           {children}
@@ -129,7 +129,7 @@ export function Checkbox({
 }: { label: ReactNode } & InputHTMLAttributes<HTMLInputElement>) {
   return (
     <label className={cn('inline-flex cursor-pointer items-center gap-2 text-sm', className)}>
-      <input type="checkbox" className="size-4 rounded border-border accent-primary-700" {...rest} />
+      <input type="checkbox" className="size-4 rounded border-border accent-primary-solid" {...rest} />
       {label}
     </label>
   )

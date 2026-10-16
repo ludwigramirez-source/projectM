@@ -26,7 +26,7 @@ export function MyTasksPage() {
 
   const open = (t: TaskItem) => t.status !== 'Completada' && !t.isOverdue
   const buckets: { title: string; tone?: string; filter: (t: TaskItem) => boolean }[] = [
-    { title: 'Vencidas', tone: 'text-danger-500', filter: (t) => t.isOverdue },
+    { title: 'Vencidas', tone: 'text-danger-fg', filter: (t) => t.isOverdue },
     { title: 'Hoy', filter: (t) => open(t) && t.dueDate === today },
     { title: 'Esta semana', filter: (t) => open(t) && !!t.dueDate && t.dueDate >= tomorrow && t.dueDate <= weekEnd },
     { title: 'Más adelante', filter: (t) => open(t) && !!t.dueDate && t.dueDate > weekEnd },
@@ -46,12 +46,12 @@ export function MyTasksPage() {
       ) : (
         <div className="space-y-4 p-4 sm:p-6">
           <label className="inline-flex items-center gap-2 text-sm">
-            <input type="checkbox" className="size-4 accent-primary-700" checked={showDone} onChange={(e) => setShowDone(e.target.checked)} />
+            <input type="checkbox" className="size-4 accent-primary-solid" checked={showDone} onChange={(e) => setShowDone(e.target.checked)} />
             Incluir completadas
           </label>
           {!data?.items.length ? (
             <Card>
-              <EmptyState icon={<CheckCircle2 className="size-8 text-success-700" />} title="¡Todo al día!" description="No tienes tareas pendientes asignadas." />
+              <EmptyState icon={<CheckCircle2 className="size-8 text-success-fg" />} title="¡Todo al día!" description="No tienes tareas pendientes asignadas." />
             </Card>
           ) : (
             buckets.map((b) => {

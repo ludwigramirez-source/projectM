@@ -13,7 +13,7 @@ export function Spinner({ size = 'md', className }: { size?: 'sm' | 'md' | 'lg';
 
 export function PageLoader() {
   return (
-    <div className="flex h-full min-h-40 items-center justify-center text-primary-700">
+    <div className="flex h-full min-h-40 items-center justify-center text-primary-fg">
       <Spinner size="lg" />
     </div>
   )

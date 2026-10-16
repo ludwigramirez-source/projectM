@@ -28,7 +28,7 @@ export function TemplatesPage() {
               <Card key={t.id} title={t.name} actions={
                 <div className="flex gap-1">
                   <Button variant="ghost" size="sm" aria-label="Editar" icon={<Pencil className="size-3.5" />} onClick={() => setEditing(t.id)} />
-                  <Button variant="ghost" size="sm" aria-label="Eliminar" icon={<Trash2 className="size-3.5 text-danger-500" />}
+                  <Button variant="ghost" size="sm" aria-label="Eliminar" icon={<Trash2 className="size-3.5 text-danger-fg" />}
                     onClick={() => confirm(`¿Eliminar la plantilla «${t.name}»?`) && remove.mutate(t.id, { onError: (e) => toast.error(errorMessage(e)) })} />
                 </div>
               }>
@@ -99,7 +99,7 @@ function TemplateForm({ id, initial, onClose }: { id: string | null; initial?: T
                 </Select>
                 <Input aria-label="Desfase (días)" title="Desfase (días)" type="number" min={0} value={t.startOffsetDays} onChange={(e) => set(i, { startOffsetDays: Number(e.target.value) })} wrapperClassName="sm:col-span-1" />
                 <Input aria-label="Duración (días)" title="Duración (días)" type="number" min={1} value={t.durationDays} onChange={(e) => set(i, { durationDays: Number(e.target.value) })} wrapperClassName="sm:col-span-2" />
-                <Button variant="ghost" aria-label="Quitar tarea" icon={<Trash2 className="size-4 text-danger-500" />} onClick={() => setTasks(tasks.filter((_, idx) => idx !== i))} className="sm:col-span-1" />
+                <Button variant="ghost" aria-label="Quitar tarea" icon={<Trash2 className="size-4 text-danger-fg" />} onClick={() => setTasks(tasks.filter((_, idx) => idx !== i))} className="sm:col-span-1" />
               </div>
             ))}
           </div>

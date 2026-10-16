@@ -126,7 +126,7 @@ export function NewProjectPage() {
               <span
                 className={cn(
                   'flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold',
-                  i < step ? 'bg-success-700 text-white' : i === step ? 'bg-primary-700 text-white' : 'bg-neutral-200 text-fg-muted',
+                  i < step ? 'bg-success-solid text-on-success-solid' : i === step ? 'bg-primary-solid text-on-primary-solid' : 'bg-track text-fg-muted',
                 )}
               >
                 {i < step ? <Check className="size-3.5" /> : i + 1}
@@ -190,8 +190,8 @@ export function NewProjectPage() {
               {people
                 ?.filter((p) => p.id !== (managerId || user?.id))
                 .map((p) => (
-                  <label key={p.id} className={cn('flex cursor-pointer items-center gap-2 rounded-md border p-2', members.includes(p.id) ? 'border-primary-500 bg-primary-50' : 'border-border hover:bg-surface-muted')}>
-                    <input type="checkbox" className="size-4 accent-primary-700" checked={members.includes(p.id)} onChange={() => toggleMember(p.id)} />
+                  <label key={p.id} className={cn('flex cursor-pointer items-center gap-2 rounded-md border p-2', members.includes(p.id) ? 'border-primary-mark bg-primary-subtle' : 'border-border hover:bg-surface-muted')}>
+                    <input type="checkbox" className="size-4 accent-primary-solid" checked={members.includes(p.id)} onChange={() => toggleMember(p.id)} />
                     <Avatar name={p.fullName} size="sm" />
                     <span className="min-w-0">
                       <span className="block truncate text-sm">{p.fullName}</span>

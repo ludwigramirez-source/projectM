@@ -35,8 +35,9 @@ docker compose up -d --build      # web en http://localhost:8080, API en 127.0.0
 - Listados paginados con `ToPagedAsync(page, pageSize)` (máx 100) → `{ items, page, pageSize, totalCount }`.
 - Enums se serializan como string (nombres en español sin tildes: `EnProgreso`, `Planeacion`).
 - Fechas de calendario (`StartDate`, `DueDate`, fechas planeadas) son `DateOnly`; instantes son `DateTimeOffset` UTC.
-- **Frontend**: colores SOLO por tokens (`bg-primary-700`, `text-fg-muted`, …). Los colores por defecto de Tailwind están deshabilitados y `design-rules.test.ts` falla si aparece un hex/rgb literal fuera de `src/styles`. Paleta única en `src/styles/tokens.css`.
-- Contraste: texto blanco nunca sobre primary/accent/success 500 → usar `text-on-light` o tono 700+. Botón primario = `primary-700`.
+- **Frontend**: colores SOLO por tokens semánticos que cambian con el tema: superficies (`bg-bg`, `bg-surface`, `text-fg`, `text-fg-muted`, `border-border`, `bg-track`, `bg-overlay/50`) y tonos (`{primary|secondary|accent|success|danger|neutral}-{subtle|subtle-fg|fg|solid|solid-hover|mark|line}` + `text-on-{tono}-solid`). Las escalas 50–900 no se usan en componentes (`design-rules.test.ts` lo prohíbe, salvo `DesignSystemPage`), ni hex/rgb literales. Paleta y valores claro/oscuro en `src/styles/tokens.css`; `tokens.contrast.test.ts` valida AA en ambos temas.
+- Patrones: badge = `bg-X-subtle text-X-subtle-fg`; botón = `bg-X-solid text-on-X-solid hover:bg-X-solid-hover`; texto de estado/error = `text-X-fg`; puntos/barras/bordes de color = `X-mark`.
+- Tema: `ThemeProvider`/`ThemeSwitch` (`src/app/theme.tsx`); `data-theme` en `<html>`, inicia según el sistema y recuerda la elección (`localStorage.pm-theme`); script inline en `index.html` evita el parpadeo; al imprimir se fuerza claro.
 - Estados de tarea → tonos: Pendiente secondary, En progreso primary, En revisión accent, Completada success, Bloqueada/Vencida danger (`src/lib/status.ts`).
 - TypeScript sin `enum` (`erasableSyntaxOnly`): usar uniones de strings. Alias `@/` → `src/`.
 - Lint: oxlint (plantilla de Vite 8) + Prettier.

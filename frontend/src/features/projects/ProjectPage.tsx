@@ -112,7 +112,7 @@ function ClosedBanner({ project }: { project: ProjectDetail }) {
   const { reopen } = useClosureMutations(project.id)
   const toast = useToast()
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-success-200 bg-success-50 px-4 py-2 text-sm text-success-800 sm:px-6">
+    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-success-line bg-success-subtle px-4 py-2 text-sm text-success-fg sm:px-6">
       <span className="flex items-center gap-2">
         <Lock className="size-4" /> Proyecto cerrado: está en modo de solo lectura.
       </span>

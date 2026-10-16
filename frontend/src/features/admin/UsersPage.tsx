@@ -133,7 +133,7 @@ export function UsersPage() {
                               variant="ghost"
                               size="sm"
                               aria-label="Desactivar"
-                              icon={<UserX className="size-4 text-danger-500" />}
+                              icon={<UserX className="size-4 text-danger-fg" />}
                               onClick={() => {
                                 if (!confirm(`¿Desactivar a ${u.fullName}? Se cerrarán sus sesiones.`)) return
                                 deactivate.mutate(u.id, {

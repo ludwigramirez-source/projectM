@@ -101,14 +101,14 @@ export function TaskRow({ task, canEdit, showProject }: { task: TaskItem; canEdi
         <div className="flex items-center gap-2">
           <input
             type="checkbox"
-            className="size-4 shrink-0 accent-success-700"
+            className="size-4 shrink-0 accent-success-solid"
             aria-label={`Completar ${task.title}`}
             checked={task.status === 'Completada'}
             disabled={!canEdit}
             onChange={(e) => m.status.mutate({ id: task.id, status: e.target.checked ? 'Completada' : 'Pendiente' }, { onError: (err) => toast.error(errorMessage(err)) })}
           />
           <div className="min-w-0">
-            <button onClick={() => open(task.id)} className={cn('block max-w-full truncate text-left font-medium hover:text-primary-700', task.status === 'Completada' && 'text-fg-muted line-through')}>
+            <button onClick={() => open(task.id)} className={cn('block max-w-full truncate text-left font-medium hover:text-primary-fg', task.status === 'Completada' && 'text-fg-muted line-through')}>
               {task.title}
             </button>
             <div className="flex flex-wrap items-center gap-1.5 text-xs text-fg-muted">
@@ -128,7 +128,7 @@ export function TaskRow({ task, canEdit, showProject }: { task: TaskItem; canEdi
           <span className="truncate text-xs">{task.assigneeName ?? <span className="text-fg-muted">Sin asignar</span>}</span>
         </span>
       </td>
-      <td className={cn('px-3 py-2 text-xs', task.isOverdue ? 'font-medium text-danger-500' : 'text-fg-muted')}>{fmtShortDate(task.dueDate)}</td>
+      <td className={cn('px-3 py-2 text-xs', task.isOverdue ? 'font-medium text-danger-fg' : 'text-fg-muted')}>{fmtShortDate(task.dueDate)}</td>
       <td className="px-3 py-2"><PriorityBadge priority={task.priority} /></td>
     </tr>
   )

@@ -5,6 +5,7 @@ import { NavItem, NavSection } from './Nav'
 import { SpaceTree } from './SpaceTree'
 import { TaskDrawer } from '@/features/tasks/TaskDrawer'
 import { NotificationBell } from './NotificationBell'
+import { ThemeSwitch } from '@/app/theme'
 import { AppShell, Logo } from './AppShell'
 import { Avatar, PageLoader } from '@/components/ui'
 import { roleLabel, useAuth } from '@/app/auth'
@@ -104,6 +105,7 @@ export function MainLayout() {
       sidebar={<Sidebar />}
       topbar={
         <div className="flex flex-1 items-center justify-end gap-2">
+          <ThemeSwitch />
           <NotificationBell />
           <UserMenu />
         </div>

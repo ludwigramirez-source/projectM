@@ -43,7 +43,7 @@ export function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-center justify-center gap-2 px-4 py-12 text-center">
-      {icon && <div className="text-secondary-400">{icon}</div>}
+      {icon && <div className="text-secondary-mark">{icon}</div>}
       <p className="font-medium">{title}</p>
       {description && <p className="max-w-sm text-sm text-fg-muted">{description}</p>}
       {action && <div className="mt-2">{action}</div>}
@@ -52,12 +52,12 @@ export function EmptyState({
 }
 
 const AVATAR_TONES = [
-  'bg-primary-700 text-white',
-  'bg-secondary-700 text-white',
-  'bg-success-700 text-white',
-  'bg-accent-800 text-white',
-  'bg-primary-200 text-primary-900',
-  'bg-accent-300 text-neutral-900',
+  'bg-primary-solid text-on-primary-solid',
+  'bg-secondary-solid text-on-secondary-solid',
+  'bg-success-solid text-on-success-solid',
+  'bg-accent-solid text-on-accent-solid',
+  'bg-primary-subtle text-primary-subtle-fg',
+  'bg-accent-subtle text-accent-subtle-fg',
 ]
 
 export function Avatar({
@@ -159,7 +159,7 @@ export function Tabs<T extends string>({
           className={cn(
             '-mb-px inline-flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors',
             value === it.value
-              ? 'border-primary-600 text-primary-800'
+              ? 'border-primary-mark text-primary-fg'
               : 'border-transparent text-fg-muted hover:text-fg',
           )}
         >
@@ -171,11 +171,11 @@ export function Tabs<T extends string>({
 }
 
 export function ProgressBar({ value, tone = 'success' }: { value: number; tone?: 'success' | 'primary' | 'danger' }) {
-  const color = { success: 'bg-success-500', primary: 'bg-primary-500', danger: 'bg-danger-500' }[tone]
+  const color = { success: 'bg-success-mark', primary: 'bg-primary-mark', danger: 'bg-danger-mark' }[tone]
   const v = Math.max(0, Math.min(100, value))
   return (
     <div
-      className="h-2 w-full overflow-hidden rounded-full bg-neutral-200"
+      className="h-2 w-full overflow-hidden rounded-full bg-track"
       role="progressbar"
       aria-valuenow={v}
       aria-valuemin={0}

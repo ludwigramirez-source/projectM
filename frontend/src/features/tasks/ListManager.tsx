@@ -44,7 +44,7 @@ function Lists({ project }: { project: ProjectDetail }) {
                 <span className="flex-1">{l.name}</span>
                 <span className="text-xs text-fg-muted">{l.taskCount} tareas</span>
                 <Button variant="ghost" size="sm" aria-label="Renombrar" icon={<Pencil className="size-3.5" />} onClick={() => setEditing({ id: l.id, name: l.name })} />
-                <Button variant="ghost" size="sm" aria-label="Eliminar lista" icon={<Trash2 className="size-3.5 text-danger-500" />}
+                <Button variant="ghost" size="sm" aria-label="Eliminar lista" icon={<Trash2 className="size-3.5 text-danger-fg" />}
                   onClick={() => confirm(`¿Eliminar la lista «${l.name}»?`) && m.remove.mutate(l.id, { onError })} />
               </>
             )}
@@ -82,7 +82,7 @@ function Fields({ project }: { project: ProjectDetail }) {
               {f.type === 'Seleccion' && <span className="block text-xs text-fg-muted">{f.options.join(' · ')}</span>}
             </span>
             <Badge tone="primary">{TYPES.find((t) => t.value === f.type)?.label}</Badge>
-            <Button variant="ghost" size="sm" aria-label="Eliminar campo" icon={<Trash2 className="size-3.5 text-danger-500" />}
+            <Button variant="ghost" size="sm" aria-label="Eliminar campo" icon={<Trash2 className="size-3.5 text-danger-fg" />}
               onClick={() => confirm(`¿Eliminar el campo «${f.name}» y sus valores?`) && m.remove.mutate(f.id, { onError })} />
           </li>
         ))}

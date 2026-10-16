@@ -43,7 +43,7 @@ function ChecklistEditor({ initial }: { initial: ChecklistTemplateItem[] }) {
                   <Checkbox label="Obligatorio" checked={it.isRequired} onChange={(e) => setItems(items.map((x, idx) => (idx === i ? { ...x, isRequired: e.target.checked } : x)))} />
                   <Button variant="ghost" size="sm" aria-label="Subir" disabled={i === 0} icon={<ArrowUp className="size-3.5" />} onClick={() => move(i, -1)} />
                   <Button variant="ghost" size="sm" aria-label="Bajar" disabled={i === items.length - 1} icon={<ArrowDown className="size-3.5" />} onClick={() => move(i, 1)} />
-                  <Button variant="ghost" size="sm" aria-label="Quitar" icon={<Trash2 className="size-3.5 text-danger-500" />} onClick={() => setItems(items.filter((_, idx) => idx !== i))} />
+                  <Button variant="ghost" size="sm" aria-label="Quitar" icon={<Trash2 className="size-3.5 text-danger-fg" />} onClick={() => setItems(items.filter((_, idx) => idx !== i))} />
                 </li>
               ))}
             </ul>

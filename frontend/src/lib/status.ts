@@ -41,39 +41,30 @@ export const healthMeta: Record<ProjectHealth, { label: string; tone: Tone }> = 
 
 /** Clases de badge (fondo claro + texto oscuro, AA verificado). */
 export const toneBadge: Record<Tone, string> = {
-  secondary: 'bg-secondary-100 text-secondary-800',
-  primary: 'bg-primary-100 text-primary-800',
-  accent: 'bg-accent-100 text-accent-900',
-  success: 'bg-success-100 text-success-800',
-  danger: 'bg-danger-50 text-danger-700',
-  neutral: 'bg-neutral-100 text-neutral-700',
+  secondary: 'bg-secondary-subtle text-secondary-subtle-fg',
+  primary: 'bg-primary-subtle text-primary-subtle-fg',
+  accent: 'bg-accent-subtle text-accent-subtle-fg',
+  success: 'bg-success-subtle text-success-subtle-fg',
+  danger: 'bg-danger-subtle text-danger-subtle-fg',
+  neutral: 'bg-neutral-subtle text-neutral-subtle-fg',
 }
 
 /** Color sólido (puntos, bordes de columna Kanban, barras). */
 export const toneDot: Record<Tone, string> = {
-  secondary: 'bg-secondary-500',
-  primary: 'bg-primary-500',
-  accent: 'bg-accent-500',
-  success: 'bg-success-500',
-  danger: 'bg-danger-500',
-  neutral: 'bg-neutral-400',
+  secondary: 'bg-secondary-mark',
+  primary: 'bg-primary-mark',
+  accent: 'bg-accent-mark',
+  success: 'bg-success-mark',
+  danger: 'bg-danger-mark',
+  neutral: 'bg-neutral-mark',
 }
 
 export const toneBorder: Record<Tone, string> = {
-  secondary: 'border-secondary-500',
-  primary: 'border-primary-500',
-  accent: 'border-accent-500',
-  success: 'border-success-500',
-  danger: 'border-danger-500',
-  neutral: 'border-neutral-400',
+  secondary: 'border-secondary-mark',
+  primary: 'border-primary-mark',
+  accent: 'border-accent-mark',
+  success: 'border-success-mark',
+  danger: 'border-danger-mark',
+  neutral: 'border-neutral-mark',
 }
 
-/** Variable CSS del tono (para SVG/gráficos). */
-export const toneVar: Record<Tone, string> = {
-  secondary: 'rgb(var(--pm-secondary-500))',
-  primary: 'rgb(var(--pm-primary-500))',
-  accent: 'rgb(var(--pm-accent-500))',
-  success: 'rgb(var(--pm-success-500))',
-  danger: 'rgb(var(--pm-danger-500))',
-  neutral: 'rgb(var(--pm-neutral-400))',
-}
