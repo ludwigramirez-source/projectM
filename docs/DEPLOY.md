@@ -89,6 +89,30 @@ Tiempo estimado: 45–60 minutos la primera vez.
 
 ✅ Supabase listo. Tienes: CADENA_DB, S3_ENDPOINT, S3_REGION, S3_KEY_ID, S3_SECRET.
 
+### 1.5 Bloquear la API REST de Supabase (obligatorio, después del primer arranque de la API)
+
+Supabase publica las tablas del esquema `public` por su API REST (PostgREST), y la clave `sb_publishable_…` es pública. Sin este paso, cualquiera podría leer `Users` o `RefreshTokens`. ProjectM no usa esa API: solo la API de .NET habla con la base, como `postgres` (dueño de las tablas, al que no le aplica RLS).
+
+Cuando la API haya arrancado una vez (paso 2) y creado las tablas, abre **SQL Editor** y ejecuta:
+
+```sql
+do $$
+declare t record;
+begin
+  for t in select tablename from pg_tables where schemaname = 'public' loop
+    execute format('alter table public.%I enable row level security', t.tablename);
+  end loop;
+end $$;
+revoke all on all tables in schema public from anon, authenticated;
+revoke all on all sequences in schema public from anon, authenticated;
+revoke all on all functions in schema public from anon, authenticated;
+alter default privileges for role postgres in schema public revoke all on tables from anon, authenticated;
+alter default privileges for role postgres in schema public revoke all on sequences from anon, authenticated;
+alter default privileges for role postgres in schema public revoke all on functions from anon, authenticated;
+```
+
+En **Advisors → Security** ya no debe aparecer *RLS Disabled in Public*. El aviso informativo *RLS Enabled No Policy* es esperado: nadie fuera de la API puede leer ni escribir. Las tablas que agreguen migraciones futuras quedan sin permisos para `anon`/`authenticated` (por el `alter default privileges`); vuelve a ejecutar el bloque si quieres también RLS en ellas.
+
 ---
 
 ## Paso 2. Render (API .NET)
