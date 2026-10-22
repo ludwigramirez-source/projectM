@@ -49,7 +49,7 @@ builder.Services.ConfigureHttpJsonOptions(o =>
 });
 
 builder.Services.AddDbContext<AppDbContext>(o =>
-    o.UseNpgsql(config.GetConnectionString("Default"),
+    o.UseNpgsql(ConnectionStrings.NormalizePostgres(config.GetConnectionString("Default")),
         sql => sql.EnableRetryOnFailure(5)));
 
 builder.Services.AddSingleton(TimeProvider.System);

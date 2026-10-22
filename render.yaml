@@ -19,7 +19,7 @@ services:
         value: "8080"
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
-      # Supabase → Project Settings → Database → Connection string → "Session pooler" (formato .NET/Npgsql).
+      # Supabase → Connect → Direct → Session pooler (URI postgresql://… o formato clave=valor de Npgsql).
       - key: ConnectionStrings__Default
         sync: false
       - key: Jwt__Key

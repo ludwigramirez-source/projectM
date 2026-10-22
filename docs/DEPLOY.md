@@ -46,21 +46,25 @@ Tiempo estimado: 45–60 minutos la primera vez.
 
 ### 1.2 Copiar la cadena de conexión
 
-1. En el proyecto, pulsa el botón **Connect** (arriba, junto al nombre del proyecto).
-2. En la ventana:
-   - Pestaña o tipo: **.NET**.
-   - Método: **Session pooler**.
-     - ⚠️ **No uses "Direct connection"**: es solo IPv6 y Render no puede alcanzarla.
-     - ⚠️ **No uses "Transaction pooler"**: no es compatible con una API que mantiene conexiones abiertas.
-3. Copia la cadena. Se ve parecida a:
+1. En el proyecto, pulsa el botón **Connect** (arriba, junto al nombre del proyecto). Se abre la ventana **"Connect to your project"**.
+2. Arriba hay cinco pestañas: *Framework, Server, Direct, ORM, MCP*. Elige **Direct** (*Connection string*).
+   - ⚠️ **No uses la pestaña "Framework"** (la que muestra `dotnet add package Supabase` y una `Key` `sb_publishable_…`). Esa es la librería cliente de Supabase; ProjectM se conecta directo a PostgreSQL.
+3. Dentro de **Direct**, en el selector del método de conexión (*Connection method*), elige **Session pooler**.
+   - Si aparece un selector de tipo o formato, deja **URI**.
+   - ⚠️ **No uses "Direct connection"**: es solo IPv6 y Render no puede alcanzarla.
+   - ⚠️ **No uses "Transaction pooler"**: no es compatible con una API que mantiene conexiones abiertas.
+4. Copia la cadena que aparece. Se ve parecida a:
    ```
-   User Id=postgres.abcdefghijkl;Password=[YOUR-PASSWORD];Server=aws-0-us-west-1.pooler.supabase.com;Port=5432;Database=postgres
+   postgresql://postgres.abcdefghijkl:[YOUR-PASSWORD]@aws-1-us-east-2.pooler.supabase.com:5432/postgres
    ```
-4. Reemplaza `[YOUR-PASSWORD]` por la contraseña del paso 1.1 y **agrega al final** `;SSL Mode=Require`. Debe quedar así:
+   Comprueba que el host termina en **`pooler.supabase.com`** y que el puerto es **`5432`**.
+5. Reemplaza `[YOUR-PASSWORD]` (con los corchetes) por la contraseña del paso 1.1:
    ```
-   User Id=postgres.abcdefghijkl;Password=TuClaveReal;Server=aws-0-us-west-1.pooler.supabase.com;Port=5432;Database=postgres;SSL Mode=Require
+   postgresql://postgres.abcdefghijkl:TuClaveReal@aws-1-us-east-2.pooler.supabase.com:5432/postgres
    ```
-   Guárdala como **CADENA_DB**. No crees tablas a mano: la API las crea sola al arrancar.
+   Guárdala como **CADENA_DB**. La API acepta este formato tal cual y activa SSL sola. No crees tablas a mano: la API las crea al arrancar.
+   - Si tu contraseña tiene símbolos como `@`, `:`, `/`, `#` o `%`, cámbiala en *Project Settings → Database → Reset database password* por una solo con letras y números. La alternativa es reemplazar cada símbolo por su código URL (`@` → `%40`).
+   - También se acepta el formato clave=valor: `Host=…;Port=5432;Database=postgres;Username=postgres.<ref>;Password=…;SSL Mode=Require`.
 
 ### 1.3 Crear el bucket de adjuntos
 
@@ -71,14 +75,17 @@ Tiempo estimado: 45–60 minutos la primera vez.
 
 ### 1.4 Activar el acceso S3 y crear las claves
 
-1. Menú izquierdo → **Project Settings** (engranaje) → **Storage**.
-2. En **S3 Connection**:
-   - Activa **Enable connection via S3 protocol** si está apagado y guarda.
-   - Copia **Endpoint** → guárdalo como **S3_ENDPOINT** (algo como `https://abcdefghijkl.supabase.co/storage/v1/s3`).
-   - Copia **Region** → **S3_REGION** (p. ej. `us-west-1`).
-3. En **S3 Access Keys** → **New access key** → descripción `projectm-api` → **Create access key**.
-4. Copia **Access key ID** → **S3_KEY_ID** y **Secret access key** → **S3_SECRET**.
+1. Busca la configuración **S3** de Storage. Según la versión del panel está en:
+   - **Storage** → barra lateral de Storage → **S3** (sección *Configuration* / *Settings*), o
+   - **Project Settings** (engranaje) → **Storage** → **S3 Connection**.
+2. Si hay un interruptor **Enable connection via S3 protocol**, actívalo y guarda.
+3. Copia:
+   - **Endpoint** → guárdalo como **S3_ENDPOINT** (algo como `https://abcdefghijkl.supabase.co/storage/v1/s3`).
+   - **Region** → **S3_REGION** (p. ej. `us-east-2`).
+4. En **S3 Access Keys** pulsa **New access key** → descripción `projectm-api` → **Create access key**.
+5. Copia **Access key ID** → **S3_KEY_ID** y **Secret access key** → **S3_SECRET**.
    - ⚠️ El secreto se muestra **una sola vez**.
+   - ⚠️ Son distintas de las claves `sb_publishable_…` / `sb_secret_…` de *API Keys*: esas no sirven aquí.
 
 ✅ Supabase listo. Tienes: CADENA_DB, S3_ENDPOINT, S3_REGION, S3_KEY_ID, S3_SECRET.
 
@@ -220,7 +227,8 @@ Para una instancia de prueba, agrega en Render `Seed__Demo=true` y `Seed__DemoPa
 
 | Síntoma | Causa probable | Solución |
 |---|---|---|
-| Render: `Failed to connect` / timeout a la base | Cadena de **Direct connection** (IPv6) o contraseña sin reemplazar | Usa la del **Session pooler** (paso 1.2) con la contraseña real y `;SSL Mode=Require` |
+| Render: `Failed to connect` / timeout a la base | Cadena de **Direct connection** (IPv6) o `[YOUR-PASSWORD]` sin reemplazar | Usa la del **Session pooler** (host `…pooler.supabase.com`, puerto 5432) con la contraseña real |
+| Render: `password authentication failed` | Contraseña equivocada o con símbolos sin codificar | Restablécela en Supabase (solo letras y números) y actualiza `ConnectionStrings__Default` |
 | Render: `Jwt:Key debe configurarse` | Variable vacía | Environment → `Jwt__Key` → **Generate** |
 | `/health` responde 503 | La API no llega a la base | Revisa `ConnectionStrings__Default`; el proyecto de Supabase podría estar pausado |
 | Al entrar dice "No se pudo conectar con el servidor" | `vercel.json` apunta a otra URL de Render | Paso 2.4 y redeploy en Vercel |
@@ -276,7 +284,7 @@ Copia esto en una nota privada (no en el repositorio) y complétala a medida que
 
 ```
 Supabase
-  CADENA_DB    = User Id=...;Password=...;Server=...pooler.supabase.com;Port=5432;Database=postgres;SSL Mode=Require
+  CADENA_DB    = postgresql://postgres.<ref>:<clave>@aws-...pooler.supabase.com:5432/postgres
   S3_ENDPOINT  = https://<ref>.supabase.co/storage/v1/s3
   S3_REGION    =
   S3_KEY_ID    =
