@@ -1,96 +1,297 @@
-# Despliegue en Vercel + Render + Supabase
+# Guía de despliegue: Supabase + Render + Vercel (rama `vercel`)
 
-Arquitectura de producción (rama `vercel`):
+Esta guía publica ProjectM en internet con tres servicios:
+
+| Servicio | Qué aloja | Plan sugerido |
+|---|---|---|
+| **Supabase** | Base de datos PostgreSQL y archivos adjuntos (Storage) | Free para empezar (ver límites al final) |
+| **Render** | La API .NET (contenedor Docker) | **Starter** (~7 USD/mes). El Free sirve para probar, pero se duerme |
+| **Vercel** | El frontend (React/PWA), con HTTPS | Hobby para pruebas personales; **Pro** si es uso de una empresa |
 
 ```
-Navegador / PWA
-   │  https://projectm.vercel.app           (frontend estático + proxy de /api)
-   ├──────────────► Vercel ── /api/* ──►┐
-   │                                     │
-   │  SignalR (WebSocket) y adjuntos     ▼
-   └──────────────────────────────► Render: API .NET (Docker)  https://projectm-api.onrender.com
-                                         │
-                                         ├──► Supabase Postgres  (datos)
-                                         └──► Supabase Storage   (adjuntos, API S3, bucket privado)
+Navegador / app instalada (PWA)
+   │  https://<tu-app>.vercel.app
+   ├──► Vercel ── reenvía /api/* ──►┐
+   │                                 ▼
+   └── SignalR y adjuntos ──► Render: API .NET ──► Supabase (PostgreSQL + Storage)
 ```
 
-**Por qué así:**
-- **Vercel no ejecuta .NET**, así que la API vive en Render como contenedor Docker, siempre encendida (SignalR y el aviso de vencimientos lo requieren).
-- **Con dominios gratuitos**, `vercel.app` y `onrender.com` son sitios distintos y la cookie de sesión (`HttpOnly`, `Secure`, `SameSite=Strict`) no viajaría entre ellos. Por eso Vercel **reenvía `/api/*`** a Render: para el navegador, la API está en el mismo origen y la cookie funciona sin cambios.
-- **El proxy de Vercel no admite WebSockets y limita el tamaño de los cuerpos (~4,5 MB).** Por eso **SignalR y los adjuntos van directo a Render** (`VITE_DIRECT_API_URL`). Esas llamadas usan el token JWT, no la cookie.
+> **Orden importante**: Supabase → Render → Vercel → volver a Render (ajustar CORS). Cada paso necesita un dato del anterior.
+>
+> Lleva una nota con los valores que irás copiando; la plantilla está en el [Anexo A](#anexo-a-hoja-de-valores).
 
-> Con un dominio propio (`app.tuempresa.com` + `api.tuempresa.com`) todo podría ir directo; ver "Dominio propio" al final.
+Tiempo estimado: 45–60 minutos la primera vez.
 
-## 1. Supabase
+---
 
-1. Crea un proyecto en <https://supabase.com> y elige una región cercana a la de Render (p. ej. *East US* si Render está en *Oregon/Virginia*).
-2. **Base de datos**: *Project Settings → Database → Connection string*. Elige **Session pooler** (no "Transaction pooler", que no es compatible con una API que mantiene conexiones) y el formato **.NET**. Se ve así:
+## Paso 0. Antes de empezar
+
+1. Ten acceso al repositorio `ludwigramirez-source/projectM` en GitHub y verifica que existe la rama **`vercel`**.
+2. Crea (o usa) cuentas en <https://supabase.com>, <https://render.com> y <https://vercel.com>. Lo más simple es entrar en las tres con **"Continue with GitHub"**.
+3. Prepara la **contraseña del Admin inicial**: mínimo 10 caracteres, con mayúscula, minúscula y número (p. ej. generada con tu gestor de contraseñas).
+
+---
+
+## Paso 1. Supabase (base de datos y archivos)
+
+### 1.1 Crear el proyecto
+
+1. Entra a <https://supabase.com/dashboard> → **New project**.
+2. Completa:
+   - **Organization**: la tuya.
+   - **Project name**: `projectm`.
+   - **Database Password**: pulsa **Generate a password** y **cópiala ya** a tu hoja de valores (no se vuelve a mostrar completa).
+   - **Region**: elige **East US (North Virginia)** o **West US (Oregon)**, para que quede cerca de Render (el blueprint usa Oregon).
+3. Pulsa **Create new project** y espera 1–2 minutos a que termine de aprovisionar.
+
+### 1.2 Copiar la cadena de conexión
+
+1. En el proyecto, pulsa el botón **Connect** (arriba, junto al nombre del proyecto).
+2. En la ventana:
+   - Pestaña o tipo: **.NET**.
+   - Método: **Session pooler**.
+     - ⚠️ **No uses "Direct connection"**: es solo IPv6 y Render no puede alcanzarla.
+     - ⚠️ **No uses "Transaction pooler"**: no es compatible con una API que mantiene conexiones abiertas.
+3. Copia la cadena. Se ve parecida a:
    ```
-   Host=aws-0-<region>.pooler.supabase.com;Port=5432;Database=postgres;Username=postgres.<ref>;Password=<tu-clave>;SSL Mode=Require
+   User Id=postgres.abcdefghijkl;Password=[YOUR-PASSWORD];Server=aws-0-us-west-1.pooler.supabase.com;Port=5432;Database=postgres
    ```
-   Guárdala: va en `ConnectionStrings__Default` de Render. No crees tablas: la API aplica las migraciones al arrancar.
-3. **Storage**: *Storage → New bucket* → nombre `attachments`, **privado** (no marques "Public bucket").
-4. **Claves S3**: *Project Settings → Storage → S3 Connection*:
-   - **Endpoint** (`https://<ref>.supabase.co/storage/v1/s3`) → `Storage__S3__ServiceUrl`
-   - **Region** → `Storage__S3__Region`
-   - *New access key* → `Storage__S3__AccessKeyId` y `Storage__S3__SecretAccessKey` (el secreto solo se muestra una vez).
+4. Reemplaza `[YOUR-PASSWORD]` por la contraseña del paso 1.1 y **agrega al final** `;SSL Mode=Require`. Debe quedar así:
+   ```
+   User Id=postgres.abcdefghijkl;Password=TuClaveReal;Server=aws-0-us-west-1.pooler.supabase.com;Port=5432;Database=postgres;SSL Mode=Require
+   ```
+   Guárdala como **CADENA_DB**. No crees tablas a mano: la API las crea sola al arrancar.
 
-## 2. Render (API)
+### 1.3 Crear el bucket de adjuntos
 
-1. En <https://render.com>: *New → Blueprint* → conecta el repositorio `ludwigramirez-source/projectM` y la **rama `vercel`**. Render lee `render.yaml` y crea el servicio `projectm-api`.
-2. Completa las variables marcadas como secretas:
+1. Menú izquierdo → **Storage** → **New bucket**.
+2. **Name**: `attachments` (exactamente así).
+3. **Public bucket**: **desactivado** (privado). La API valida permisos antes de entregar cada archivo.
+4. **Create bucket**.
 
-   | Variable | Valor |
+### 1.4 Activar el acceso S3 y crear las claves
+
+1. Menú izquierdo → **Project Settings** (engranaje) → **Storage**.
+2. En **S3 Connection**:
+   - Activa **Enable connection via S3 protocol** si está apagado y guarda.
+   - Copia **Endpoint** → guárdalo como **S3_ENDPOINT** (algo como `https://abcdefghijkl.supabase.co/storage/v1/s3`).
+   - Copia **Region** → **S3_REGION** (p. ej. `us-west-1`).
+3. En **S3 Access Keys** → **New access key** → descripción `projectm-api` → **Create access key**.
+4. Copia **Access key ID** → **S3_KEY_ID** y **Secret access key** → **S3_SECRET**.
+   - ⚠️ El secreto se muestra **una sola vez**.
+
+✅ Supabase listo. Tienes: CADENA_DB, S3_ENDPOINT, S3_REGION, S3_KEY_ID, S3_SECRET.
+
+---
+
+## Paso 2. Render (API .NET)
+
+### 2.1 Crear el servicio desde el blueprint
+
+1. Entra a <https://dashboard.render.com> → **New** → **Blueprint**.
+2. Conecta GitHub si te lo pide y selecciona el repositorio **`ludwigramirez-source/projectM`**.
+3. **Branch**: selecciona **`vercel`**.
+   - ⚠️ `main` no tiene el blueprint ni PostgreSQL.
+4. **Blueprint Name**: `projectm`. Render detecta el archivo `render.yaml` y muestra el servicio **`projectm-api`** (Docker, plan Starter).
+
+### 2.2 Completar las variables secretas
+
+Render muestra un formulario con las variables marcadas como secretas. Completa:
+
+| Variable | Valor |
+|---|---|
+| `ConnectionStrings__Default` | **CADENA_DB** (paso 1.2) |
+| `Cors__AllowedOrigins` | Por ahora `https://localhost` (se corrige en el paso 4) |
+| `Seed__AdminEmail` | El correo con el que entrarás como Admin |
+| `Seed__AdminPassword` | La contraseña del paso 0 |
+| `Storage__S3__ServiceUrl` | **S3_ENDPOINT** |
+| `Storage__S3__Region` | **S3_REGION** |
+| `Storage__S3__AccessKeyId` | **S3_KEY_ID** |
+| `Storage__S3__SecretAccessKey` | **S3_SECRET** |
+
+El resto ya viene definido en el blueprint:
+- `Jwt__Key` (se genera sola)
+- puerto 8080
+- zona horaria `America/Bogota`
+- cookies seguras
+- `Proxy__ForwardLimit=2`
+- almacenamiento S3 con el bucket `attachments`
+
+> ¿Otra zona horaria? Después del despliegue: servicio → **Environment** → `App__TimeZone` (formato IANA, p. ej. `America/Mexico_City`).
+
+Pulsa **Apply** (o **Deploy Blueprint**).
+
+### 2.3 Esperar el primer despliegue
+
+1. Entra al servicio **projectm-api** → pestaña **Logs**. La primera compilación de Docker tarda 5–10 minutos.
+2. Al final deberías ver líneas como:
+   ```
+   Applying migration '..._Inicial'
+   Admin inicial creado: tu-correo@...
+   Now listening on: http://[::]:8080
+   ```
+   La línea `Failed executing DbCommand ... __EFMigrationsHistory` del primer arranque es normal: la tabla todavía no existía.
+3. Copia la URL del servicio (arriba, bajo el nombre), por ejemplo `https://projectm-api.onrender.com` → **URL_API**.
+   - Si el nombre estaba ocupado, Render agrega un sufijo (p. ej. `projectm-api-x1y2.onrender.com`). Anota la URL real.
+4. Abre en el navegador `URL_API/health`. Debe responder:
+   ```json
+   {"status":"ok"}
+   ```
+
+### 2.4 Solo si la URL_API no es `https://projectm-api.onrender.com`
+
+El frontend reenvía `/api` a esa dirección y está escrita en `frontend/vercel.json`. Si tu URL es distinta:
+
+1. En GitHub abre `frontend/vercel.json` **en la rama `vercel`** → ícono de lápiz (Edit).
+2. Cambia la línea:
+   ```json
+   { "source": "/api/:path*", "destination": "https://projectm-api.onrender.com/api/:path*" },
+   ```
+   por tu URL real (conserva `/api/:path*` al final).
+3. **Commit changes** directamente en la rama `vercel`.
+
+✅ Render listo. Tienes: **URL_API**.
+
+---
+
+## Paso 3. Vercel (frontend)
+
+### 3.1 Importar el proyecto
+
+1. Entra a <https://vercel.com/new> → **Import Git Repository** → elige **`projectM`** → **Import**.
+2. Configura:
+   - **Project Name**: `projectm`. Tu URL será `https://projectm.vercel.app` o, si está ocupado, una variante.
+   - **Framework Preset**: **Vite**.
+   - **Root Directory**: pulsa **Edit** → selecciona la carpeta **`frontend`** → **Continue**.
+   - Build Command / Output Directory: déjalos por defecto (los define `frontend/vercel.json`).
+3. Despliega **Environment Variables** y agrega **antes** del primer despliegue:
+
+   | Name | Value |
    |---|---|
-   | `ConnectionStrings__Default` | Cadena del *Session pooler* de Supabase (paso 1.2) |
-   | `Cors__AllowedOrigins` | URL de Vercel, p. ej. `https://projectm.vercel.app` (varias separadas por coma) |
-   | `Seed__AdminEmail` / `Seed__AdminPassword` | Admin inicial (contraseña ≥ 10 caracteres con mayúscula, minúscula y número) |
-   | `Storage__S3__ServiceUrl`, `Storage__S3__Region`, `Storage__S3__AccessKeyId`, `Storage__S3__SecretAccessKey` | Paso 1.4 |
+   | `VITE_DIRECT_API_URL` | **URL_API**, sin barra al final (p. ej. `https://projectm-api.onrender.com`) |
 
-   `Jwt__Key` se genera solo. El resto ya viene en el blueprint: zona horaria, cookies seguras, `Proxy__ForwardLimit=2` y almacenamiento S3.
-3. Despliega. Cuando termine, `https://projectm-api.onrender.com/health` debe responder `{"status":"ok"}`.
-   - Si Render asignó otra URL porque el nombre estaba ocupado, anótala: la necesitas en el paso 3.
-   - El plan `starter` mantiene la instancia encendida. El gratuito se suspende sin tráfico y cortaría las notificaciones en vivo.
+   **No** crees `VITE_API_URL`: vacía hace que las llamadas pasen por el proxy `/api` del mismo dominio, que es lo que permite que la sesión funcione.
+4. Pulsa **Deploy**. Este primer despliegue puede salir de `main`: no importa, en el siguiente paso cambias la rama.
 
-## 3. Vercel (frontend)
+### 3.2 Publicar la rama `vercel` en producción
 
-1. Si la URL de la API no es `https://projectm-api.onrender.com`, edita `frontend/vercel.json`, cambia el `destination` del rewrite de `/api/:path*` y haz commit en la rama `vercel`.
-2. En <https://vercel.com>: *Add New → Project* → importa el repositorio y configura:
-   - **Root Directory**: `frontend`
-   - **Framework**: Vite (se detecta solo; `vercel.json` ya define build y salida)
-   - **Production Branch**: `vercel` (*Settings → Git*)
-   - **Environment Variables**:
-     - `VITE_DIRECT_API_URL` = `https://projectm-api.onrender.com` (sin barra final)
-     - `VITE_API_URL`: **déjala vacía** para que las llamadas usen el proxy `/api` del mismo origen.
-3. Despliega y abre la URL de Vercel. Si es distinta de la que pusiste en `Cors__AllowedOrigins` de Render, actualízala allí y reinicia el servicio.
-4. Inicia sesión con el Admin del paso 2. La app ya es **instalable como PWA** (HTTPS incluido): en Android usa *Instalar app* del menú de usuario; en iOS, Safari → Compartir → *Agregar a pantalla de inicio*.
+1. Proyecto → **Settings** → **Environments** → **Production** → en **Branch Tracking** escribe `vercel` → **Save**.
+   - En versiones anteriores del panel está en **Settings → Git → Production Branch**.
+2. Pestaña **Deployments** → menú **⋯** del último despliegue → **Redeploy**. O espera al siguiente push a `vercel`.
+3. Cuando quede en **Ready**, copia el dominio de producción (pestaña **Overview** → **Domains**), p. ej. `https://projectm.vercel.app` → **URL_WEB**.
 
-## Comprobaciones
+> Las variables `VITE_*` se incrustan al compilar. Si las cambias después, **haz Redeploy** para que tomen efecto.
 
-- `https://<vercel>/api/v1/auth/me` responde 401 con JSON (el proxy funciona).
-- Tras iniciar sesión, en DevTools → Network aparece la conexión WebSocket a `wss://projectm-api.onrender.com/hubs/notifications` con estado 101.
-- Subir y descargar un adjunto funciona, y en Supabase Storage aparece un objeto en `attachments`.
-- Recargar la página mantiene la sesión.
+✅ Vercel listo. Tienes: **URL_WEB**.
 
-## Datos demo (opcional)
+---
 
-Para una instancia de demostración pon `Seed__Demo=true` y `Seed__DemoPassword` en Render. Los datos se cargan una sola vez y solo si no existen.
+## Paso 4. Conectar Render con Vercel (CORS)
+
+1. Render → servicio **projectm-api** → **Environment**.
+2. Edita `Cors__AllowedOrigins` = **URL_WEB**, sin barra final (p. ej. `https://projectm.vercel.app`).
+   - Para permitir varios dominios, sepáralos con coma.
+3. **Save Changes**. Render redespliega solo (1–3 minutos).
+
+Sin este paso el login funciona (va por el proxy de Vercel), pero **fallan las notificaciones en vivo y los adjuntos**, que van directo a Render.
+
+---
+
+## Paso 5. Verificar
+
+1. Abre **URL_WEB** → inicia sesión con `Seed__AdminEmail` / `Seed__AdminPassword`.
+2. Recarga la página (F5): la sesión debe mantenerse.
+3. Crea un espacio y un proyecto con la plantilla "Proyecto estándar"; abre una tarea y **adjunta un archivo**.
+   - En Supabase → Storage → `attachments` debe aparecer el archivo.
+   - Descárgalo desde la tarea.
+4. **Notificaciones en vivo**: DevTools (F12) → **Network** → filtro **WS** → debe haber una conexión a `wss://<URL_API>/hubs/notifications` con estado **101**.
+5. **Instalar como app**:
+   - **Android/escritorio**: menú de usuario → **Instalar app**.
+   - **iPhone**: Safari → Compartir → **Agregar a pantalla de inicio**.
+6. Cambia la contraseña del Admin si usaste una temporal, crea los usuarios del equipo desde **Administración → Usuarios** y, si quieres, borra `Seed__AdminPassword` de Render (el Admin ya existe y no se vuelve a crear).
+
+### Datos de demostración (opcional)
+
+Para una instancia de prueba, agrega en Render `Seed__Demo=true` y `Seed__DemoPassword=<clave>`. Se cargan una sola vez si no existen; los usuarios demo son `@projectm.demo` (ver README).
+
+---
+
+## Problemas frecuentes
+
+| Síntoma | Causa probable | Solución |
+|---|---|---|
+| Render: `Failed to connect` / timeout a la base | Cadena de **Direct connection** (IPv6) o contraseña sin reemplazar | Usa la del **Session pooler** (paso 1.2) con la contraseña real y `;SSL Mode=Require` |
+| Render: `Jwt:Key debe configurarse` | Variable vacía | Environment → `Jwt__Key` → **Generate** |
+| `/health` responde 503 | La API no llega a la base | Revisa `ConnectionStrings__Default`; el proyecto de Supabase podría estar pausado |
+| Al entrar dice "No se pudo conectar con el servidor" | `vercel.json` apunta a otra URL de Render | Paso 2.4 y redeploy en Vercel |
+| Login OK, pero al recargar vuelve al login | Se definió `VITE_API_URL` con la URL de Render | Elimina `VITE_API_URL` en Vercel y haz Redeploy |
+| Consola: error de **CORS** al conectar `/hubs` o subir archivos | `Cors__AllowedOrigins` no coincide exactamente con URL_WEB | Paso 4 (sin barra final, con `https://`) |
+| Subir adjunto falla con 500 | Claves S3, región o bucket incorrectos | Revisa `Storage__S3__*` y que el bucket se llame `attachments` |
+| Tras unos minutos sin uso tarda ~1 min en responder | Plan **Free** de Render (se duerme) | Plan **Starter** |
+| Login bloqueado tras varios intentos | Bloqueo de cuenta (5 fallos → 15 min) | Esperar, o que un Admin restablezca la contraseña |
+
+**Logs útiles**: Render → servicio → **Logs**; Vercel → Deployments → despliegue → **Build Logs** / **Runtime Logs**; Supabase → **Logs**.
+
+---
+
+## Actualizaciones futuras
+
+- Cada `git push` a la rama `vercel` redespliega **Render** (API) y **Vercel** (frontend) automáticamente.
+- Las migraciones de base de datos se aplican solas al arrancar la API.
+- La PWA instalada muestra "Hay una nueva versión" y se actualiza al pulsar **Actualizar**.
+
+## Costos y límites a tener en cuenta
+
+- **Vercel Hobby** es para uso personal y no comercial; para una herramienta interna de empresa corresponde **Pro**.
+- **Render Free** se suspende tras ~15 minutos sin tráfico: corta SignalR y el aviso de vencimientos. **Starter** mantiene la API encendida.
+- **Supabase Free**:
+  - 500 MB de base y 1 GB de Storage.
+  - Los proyectos inactivos una semana se **pausan**; se reactivan desde el panel.
+  - Para producción conviene **Pro**, que además incluye copias de seguridad diarias.
 
 ## Seguridad
 
-- Ningún secreto vive en el repositorio. Todos están en Render o Vercel.
-- El bucket es privado y los adjuntos se descargan siempre a través de la API, que valida permisos.
-- El JWT de SignalR viaja en la URL del WebSocket (limitación de los navegadores). Dura 15 minutos y nginx no registra query strings. Si activas logs de acceso en Render, evita guardar las URLs completas.
-- El rate limiting del login usa la IP real del cliente (`Proxy__ForwardLimit=2`: Vercel + balanceador de Render). Si cambias la cadena de proxies, ajusta ese valor.
+- No hay secretos en el repositorio: todos viven en Render y Vercel.
+- El bucket es privado; los archivos solo se descargan a través de la API, que valida permisos.
+- El token de SignalR viaja en la URL del WebSocket (limitación del navegador). Dura 15 minutos y nginx no lo registra; no actives logs que guarden URLs completas.
+- El rate limiting del login usa la IP real gracias a `Proxy__ForwardLimit=2` (Vercel + balanceador de Render). Si cambias la cadena de proxies, ajústalo.
 
-## Dominio propio (recomendado más adelante)
+## Más adelante: dominio propio
 
-Con `app.tuempresa.com` en Vercel y `api.tuempresa.com` en Render (los dos sitios comparten dominio):
-1. En Vercel agrega `VITE_API_URL=https://api.tuempresa.com` y `VITE_DIRECT_API_URL=https://api.tuempresa.com`, y elimina el rewrite de `/api` en `vercel.json`.
-2. En Render: `Cors__AllowedOrigins=https://app.tuempresa.com` y `Proxy__ForwardLimit=1`.
+Con `app.tuempresa.com` en Vercel y `api.tuempresa.com` en Render:
 
-Así la cookie `SameSite=Strict` sigue funcionando (mismo sitio) y desaparece el salto extra del proxy de Vercel.
+1. Vercel → **Settings → Domains** → agrega `app.tuempresa.com`. Render → **Settings → Custom Domains** → agrega `api.tuempresa.com`. Crea los registros DNS que cada panel indica.
+2. Vercel:
+   - `VITE_API_URL=https://api.tuempresa.com` y `VITE_DIRECT_API_URL=https://api.tuempresa.com`.
+   - Quita el rewrite de `/api` en `frontend/vercel.json` y haz Redeploy.
+3. Render: `Cors__AllowedOrigins=https://app.tuempresa.com` y `Proxy__ForwardLimit=1`.
 
-## Desarrollo local
+La cookie de sesión sigue funcionando (mismo sitio) y desaparece el salto extra por el proxy de Vercel.
 
-Sin cambios respecto a `main`, pero con PostgreSQL en lugar de SQL Server: `docker compose up -d --build` levanta `db` (postgres:16), `api` y `web` en <http://localhost:8080>; `powershell -File scripts/test.ps1` corre las pruebas contra ese PostgreSQL. Para probar los adjuntos con S3 en local, define `Storage__Provider=S3` y las variables `Storage__S3__*` apuntando a un servidor compatible.
+---
+
+## Anexo A. Hoja de valores
+
+Copia esto en una nota privada (no en el repositorio) y complétala a medida que avanzas:
+
+```
+Supabase
+  CADENA_DB    = User Id=...;Password=...;Server=...pooler.supabase.com;Port=5432;Database=postgres;SSL Mode=Require
+  S3_ENDPOINT  = https://<ref>.supabase.co/storage/v1/s3
+  S3_REGION    =
+  S3_KEY_ID    =
+  S3_SECRET    =
+Render
+  URL_API      = https://
+Vercel
+  URL_WEB      = https://
+Admin
+  correo       =
+  contraseña   = (guárdala en tu gestor de contraseñas)
+```
+
+## Anexo B. Desarrollo local
+
+Sin cambios respecto a `main`, salvo que usa PostgreSQL en lugar de SQL Server:
+- `docker compose up -d --build` levanta `db` (postgres:16), `api` y `web` en <http://localhost:8080>.
+- `powershell -File scripts/test.ps1` corre las pruebas contra ese PostgreSQL.
