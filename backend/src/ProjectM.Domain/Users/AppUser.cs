@@ -8,6 +8,8 @@ public class AppUser : IdentityUser<Guid>
     public string FullName { get; set; } = "";
     public bool IsActive { get; set; } = true;
     public DateTimeOffset CreatedAt { get; set; }
+    /// <summary>Debe cambiar la contraseña antes de usar la aplicación (contraseña asignada por otra persona).</summary>
+    public bool MustChangePassword { get; set; }
 }
 
 public class AppRole : IdentityRole<Guid>

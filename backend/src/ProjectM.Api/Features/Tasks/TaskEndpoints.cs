@@ -19,7 +19,7 @@ public static class TaskEndpoints
     {
         var g = api.MapGroup("/tasks").WithTags("Tareas");
         g.MapGet("/", List);
-        g.MapPost("/", Create).Validate<CreateTaskRequest>();
+        g.MapPost("/", Create).RequireRateLimiting(ServiceRegistration.UserWritesPolicy).Validate<CreateTaskRequest>();
         g.MapGet("/{id:guid}", Get);
         g.MapPut("/{id:guid}", Update).Validate<UpdateTaskRequest>();
         g.MapDelete("/{id:guid}", Delete);

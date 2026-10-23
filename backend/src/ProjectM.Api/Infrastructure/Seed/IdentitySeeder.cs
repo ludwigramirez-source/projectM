@@ -5,7 +5,7 @@ namespace ProjectM.Api.Infrastructure.Seed;
 
 /// <summary>Crea los roles y el Admin inicial (credenciales desde variables de entorno). Idempotente.</summary>
 public class IdentitySeeder(RoleManager<AppRole> roles, UserManager<AppUser> users, IConfiguration config,
-    TimeProvider clock, ILogger<IdentitySeeder> logger)
+    TimeProvider clock, Microsoft.Extensions.Options.IOptions<Auth.AuthOptions> authOpt, ILogger<IdentitySeeder> logger)
 {
     public async Task SeedAsync()
     {
@@ -29,13 +29,16 @@ public class IdentitySeeder(RoleManager<AppRole> roles, UserManager<AppUser> use
             UserName = email,
             FullName = "Administrador",
             EmailConfirmed = true,
-            CreatedAt = clock.GetUtcNow()
+            CreatedAt = clock.GetUtcNow(),
+            // La contraseña inicial viene de una variable de entorno: se obliga a cambiarla en el primer ingreso.
+            MustChangePassword = authOpt.Value.ForcePasswordChange
         };
         var result = await users.CreateAsync(admin, password);
         if (!result.Succeeded)
             throw new InvalidOperationException("No se pudo crear el Admin inicial: " +
                                                 string.Join("; ", result.Errors.Select(e => e.Description)));
         await users.AddToRoleAsync(admin, Roles.Admin);
-        logger.LogInformation("Admin inicial creado: {Email}", email);
+        // Sin el correo en el log (dato personal): basta el identificador.
+        logger.LogInformation("Admin inicial creado (id {UserId}). Debe cambiar la contraseña al ingresar.", admin.Id);
     }
 }

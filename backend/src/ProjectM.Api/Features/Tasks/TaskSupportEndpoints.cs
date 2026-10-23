@@ -72,13 +72,14 @@ public static class TaskSupportEndpoints
         // Etiquetas (globales)
         var t = api.MapGroup("/tags").WithTags("Etiquetas");
         t.MapGet("/", Tags);
-        t.MapPost("/", CreateTag).Validate<SaveTagRequest>();
+        t.MapPost("/", CreateTag).RequireRateLimiting(ServiceRegistration.UserWritesPolicy).Validate<SaveTagRequest>();
         t.MapPut("/{id:guid}", UpdateTag).RequireAuthorization(Policies.AdminOrGestor).Validate<SaveTagRequest>();
         t.MapDelete("/{id:guid}", DeleteTag).RequireAuthorization(Policies.AdminOrGestor);
 
         // Adjuntos
         api.MapGet("/tasks/{taskId:guid}/attachments", Attachments).WithTags("Adjuntos");
-        api.MapPost("/tasks/{taskId:guid}/attachments", Upload).WithTags("Adjuntos").DisableAntiforgery();
+        api.MapPost("/tasks/{taskId:guid}/attachments", Upload).WithTags("Adjuntos").DisableAntiforgery()
+            .RequireRateLimiting(ServiceRegistration.UploadsPolicy);
         api.MapGet("/attachments/{id:guid}/download", Download).WithTags("Adjuntos");
         api.MapDelete("/attachments/{id:guid}", DeleteAttachment).WithTags("Adjuntos");
         return api;

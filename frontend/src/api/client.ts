@@ -25,6 +25,8 @@ export interface UserInfo {
   email: string
   fullName: string
   role: Role
+  /** La contraseña fue asignada por otra persona: hay que cambiarla antes de usar la app. */
+  mustChangePassword: boolean
 }
 export type Role = 'Admin' | 'Gestor' | 'Miembro' | 'Observador'
 
@@ -58,11 +60,16 @@ export const setOnSessionLost = (fn: () => void) => {
   onSessionLost = fn
 }
 
-/** POST de refresh; ante 429 (límite por IP) reintenta con espera en vez de cerrar la sesión. */
+/**
+ * POST de refresh. Reintenta con espera en vez de cerrar la sesión cuando:
+ * - 429: límite de renovaciones por IP;
+ * - 409 REFRESH_EN_CURSO: otra pestaña acaba de rotar la cookie (la nueva ya está en el navegador).
+ */
 async function fetchRefresh(attempt = 0): Promise<Response> {
   const res = await fetch(`${BASE}/auth/refresh`, { method: 'POST', credentials: 'include' })
-  if (res.status !== 429 || attempt >= 3) return res
-  const wait = Number(res.headers.get('Retry-After')) * 1000 || 1500 * (attempt + 1)
+  if ((res.status !== 429 && res.status !== 409) || attempt >= 3) return res
+  const wait =
+    res.status === 409 ? 300 * (attempt + 1) : Number(res.headers.get('Retry-After')) * 1000 || 1500 * (attempt + 1)
   await new Promise((r) => setTimeout(r, wait))
   return fetchRefresh(attempt + 1)
 }

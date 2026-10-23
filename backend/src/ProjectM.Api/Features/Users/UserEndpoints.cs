@@ -101,7 +101,7 @@ public static class UserEndpoints
     }
 
     private static async Task<IResult> Create(CreateUserRequest req, UserManager<AppUser> users, AppDbContext db,
-        TimeProvider clock, CancellationToken ct)
+        TimeProvider clock, Microsoft.Extensions.Options.IOptions<AuthOptions> authOpt, CancellationToken ct)
     {
         var user = new AppUser
         {
@@ -110,7 +110,9 @@ public static class UserEndpoints
             UserName = req.Email.Trim(),
             FullName = req.FullName.Trim(),
             EmailConfirmed = true,
-            CreatedAt = clock.GetUtcNow()
+            CreatedAt = clock.GetUtcNow(),
+            // La contraseña inicial la conoce el Admin: el usuario debe cambiarla al entrar.
+            MustChangePassword = authOpt.Value.ForcePasswordChange
         };
         (await users.CreateAsync(user, req.Password)).ThrowIfFailed();
         (await users.AddToRoleAsync(user, req.Role)).ThrowIfFailed("role");
@@ -165,11 +167,13 @@ public static class UserEndpoints
     }
 
     private static async Task<IResult> ResetPassword(Guid id, ResetPasswordRequest req, UserManager<AppUser> users,
-        TokenService tokens, IMemoryCache cache, CancellationToken ct)
+        TokenService tokens, IMemoryCache cache, Microsoft.Extensions.Options.IOptions<AuthOptions> authOpt, CancellationToken ct)
     {
         var user = await users.FindByIdAsync(id.ToString()) ?? throw AppException.NotFound("El usuario");
         var token = await users.GeneratePasswordResetTokenAsync(user);
         (await users.ResetPasswordAsync(user, token, req.NewPassword)).ThrowIfFailed();
+        user.MustChangePassword = authOpt.Value.ForcePasswordChange;
+        (await users.UpdateAsync(user)).ThrowIfFailed();
         await users.SetLockoutEndDateAsync(user, null);
         await tokens.RevokeAllAsync(user.Id, ct);
         UserSessionCache.Invalidate(cache, user.Id);

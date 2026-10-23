@@ -49,7 +49,12 @@ builder.Services.ConfigureHttpJsonOptions(o =>
 });
 
 builder.Services.AddDbContext<AppDbContext>(o =>
-    o.UseNpgsql(ConnectionStrings.NormalizePostgres(config.GetConnectionString("Default")),
+    o.UseNpgsql(new Npgsql.NpgsqlConnectionStringBuilder(
+            ConnectionStrings.NormalizePostgres(config.GetConnectionString("Default"), config["Database:RootCertificate"]))
+        {
+            // Sin Kerberos: evita el intento de cifrado GSS (la imagen no trae libgssapi y se usa TLS).
+            GssEncryptionMode = Npgsql.GssEncryptionMode.Disable
+        }.ConnectionString,
         sql => sql.EnableRetryOnFailure(5)));
 
 builder.Services.AddSingleton(TimeProvider.System);
@@ -83,9 +88,12 @@ builder.Services.Configure<ForwardedHeadersOptions>(o =>
     // (la usa el rate limiting del login).
     o.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
     o.ForwardLimit = config.GetValue("Proxy:ForwardLimit", 1);
-    o.KnownNetworks.Clear();
+    o.KnownIPNetworks.Clear();
     o.KnownProxies.Clear();
 });
+
+// Nunca arrancar fuera de Development con los valores de ejemplo publicados en el repositorio (.env.example).
+StartupGuard.RejectPublicPlaceholders(config, builder.Environment);
 
 var allowedOrigins = (config["Cors:AllowedOrigins"] ?? "")
     .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
@@ -109,9 +117,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors();
+app.UseProxySecretForAuth(config);
 app.UseAuthentication();
 app.UseRateLimiter();
 app.UseAuthorization();
+app.UseRequiredPasswordChange();
 
 await using (var scope = app.Services.CreateAsyncScope())
 {

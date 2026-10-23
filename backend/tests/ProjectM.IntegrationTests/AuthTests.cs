@@ -47,7 +47,7 @@ public class AuthTests(ApiFactory factory)
     }
 
     [Fact]
-    public async Task Cuenta_se_bloquea_tras_5_intentos_fallidos()
+    public async Task Cuenta_se_bloquea_tras_5_intentos_fallidos_sin_revelar_que_existe()
     {
         var admin = await factory.AdminClientAsync();
         var email = $"bloqueo-{Guid.NewGuid():N}@test.local";
@@ -58,8 +58,13 @@ public class AuthTests(ApiFactory factory)
         for (var i = 0; i < 5; i++)
             await client.PostAsJsonAsync("/api/v1/auth/login", new { email, password = "Mala_clave_1" });
 
+        // Bloqueada: incluso con la contraseña correcta responde igual que un correo inexistente.
         var res = await client.PostAsJsonAsync("/api/v1/auth/login", new { email, password = "Correcta_123" });
-        await res.ShouldBeAsync(423, "CUENTA_BLOQUEADA");
+        await res.ShouldBeAsync(401, "CREDENCIALES_INVALIDAS");
+        var unknown = await client.PostAsJsonAsync("/api/v1/auth/login",
+            new { email = $"no-existe-{Guid.NewGuid():N}@test.local", password = "Correcta_123" });
+        (await unknown.JsonAsync()).GetProperty("title").GetString()
+            .Should().Be((await res.JsonAsync()).GetProperty("title").GetString());
     }
 
     [Fact]
@@ -122,7 +127,16 @@ public class AuthTests(ApiFactory factory)
 
         var ok = await client.PostAsJsonAsync("/api/v1/auth/change-password",
             new { currentPassword = "Usuario_Test_123", newPassword = "Nueva_Clave_123" });
-        await ok.ShouldBeAsync(204);
+        await ok.ShouldBeAsync(200);
+        var body = await ok.JsonAsync();
+        body.GetProperty("accessToken").GetString().Should().NotBeNullOrEmpty();
+        body.GetProperty("user").GetProperty("mustChangePassword").GetBoolean().Should().BeFalse();
+
+        // El token anterior queda revocado (cambió el security stamp); el nuevo funciona.
+        await (await client.GetAsync("/api/v1/auth/me")).ShouldBeAsync(401);
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", body.GetProperty("accessToken").GetString());
+        await (await client.GetAsync("/api/v1/auth/me")).ShouldBeAsync(200);
     }
 
     private static string RefreshCookie(HttpResponseMessage res)

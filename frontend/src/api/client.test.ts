@@ -1,4 +1,4 @@
-import { api, ApiError, setAccessToken } from './client'
+import { api, ApiError, refreshSession, setAccessToken } from './client'
 
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
@@ -32,6 +32,18 @@ describe('cliente API', () => {
     expect(err).toBeInstanceOf(ApiError)
     expect(err.code).toBe('VALIDACION')
     expect(err.field('name')).toBe('Obligatorio')
+  })
+
+  it('si otra pestaña acaba de rotar la sesión (409 REFRESH_EN_CURSO) reintenta el refresh sin cerrarla', async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(json(409, { code: 'REFRESH_EN_CURSO', title: 'x' }))
+      .mockResolvedValueOnce(json(200, { accessToken: 'nuevo', expiresAt: '', user: { mustChangePassword: false } }))
+
+    const session = await refreshSession()
+    expect(session?.accessToken).toBe('nuevo')
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(fetchMock.mock.calls.every((c) => String(c[0]).includes('/auth/refresh'))).toBe(true)
   })
 
   it('no intenta renovar en endpoints de autenticación', async () => {

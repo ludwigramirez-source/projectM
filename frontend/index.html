@@ -13,16 +13,8 @@
     <meta name="apple-mobile-web-app-title" content="ProjectM" />
     <meta name="theme-color" content="#3B4563" />
     <title>ProjectM</title>
-    <script>
-      // Aplica el tema antes del primer pintado (evita parpadeo). Ver src/app/theme.tsx.
-      try {
-        var t = localStorage.getItem('pm-theme')
-        if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-        document.documentElement.dataset.theme = t
-      } catch (e) {
-        document.documentElement.dataset.theme = 'light'
-      }
-    </script>
+    <!-- Tema antes del primer pintado (archivo externo: compatible con la CSP script-src 'self'). -->
+    <script src="/theme-init.js"></script>
   </head>
   <body>
     <div id="root"></div>

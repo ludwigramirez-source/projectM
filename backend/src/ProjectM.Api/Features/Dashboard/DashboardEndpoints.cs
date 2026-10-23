@@ -29,7 +29,7 @@ public static class DashboardEndpoints
 {
     public static RouteGroupBuilder MapDashboardEndpoints(this RouteGroupBuilder api)
     {
-        api.MapGet("/dashboard", Get).WithTags("Dashboard");
+        api.MapGet("/dashboard", Get).WithTags("Dashboard").RequireRateLimiting(ServiceRegistration.UserWritesPolicy);
         return api;
     }
 

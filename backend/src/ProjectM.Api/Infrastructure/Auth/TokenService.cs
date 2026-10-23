@@ -12,10 +12,28 @@ namespace ProjectM.Api.Infrastructure.Auth;
 
 public record IssuedTokens(string AccessToken, DateTimeOffset AccessTokenExpiresAt, string RefreshToken, DateTimeOffset RefreshTokenExpiresAt);
 
-/// <summary>Emite JWT de acceso y refresh tokens rotativos (con detección de reutilización).</summary>
-public class TokenService(AppDbContext db, IOptions<JwtOptions> options, TimeProvider clock)
+public enum RotationStatus
 {
+    /// <summary>Rotado: se emitió un sucesor.</summary>
+    Rotated,
+    /// <summary>Token inexistente, vencido o de usuario inactivo.</summary>
+    Invalid,
+    /// <summary>Otra petición lo acaba de rotar (p. ej. otra pestaña): reintentar con la cookie nueva.</summary>
+    ConcurrentRotation,
+    /// <summary>Reutilización de un token ya rotado fuera del margen: posible robo, se revocan todas las sesiones.</summary>
+    ReuseDetected
+}
+
+public record RotationResult(RotationStatus Status, AppUser? User = null, string? RawToken = null, RefreshToken? Entity = null);
+
+/// <summary>Emite JWT de acceso y refresh tokens rotativos (con detección de reutilización).</summary>
+public class TokenService(AppDbContext db, IOptions<JwtOptions> options, IOptions<AuthOptions> authOptions, TimeProvider clock)
+{
+    /// <summary>Claim presente mientras el usuario debe cambiar su contraseña.</summary>
+    public const string PasswordChangeClaim = "pwd_change";
+
     private readonly JwtOptions _opt = options.Value;
+    private readonly AuthOptions _auth = authOptions.Value;
 
     public async Task<IssuedTokens> IssueAsync(AppUser user, IList<string> roles, string? ip, CancellationToken ct)
     {
@@ -28,42 +46,60 @@ public class TokenService(AppDbContext db, IOptions<JwtOptions> options, TimePro
     }
 
     /// <summary>
-    /// Rota el refresh token. Si se presenta un token ya revocado (posible robo), se revocan
-    /// todas las sesiones del usuario.
+    /// Rota el refresh token de forma atómica: solo una petición concurrente puede revocarlo y obtener
+    /// sucesor (UPDATE condicional). Presentar un token ya rotado revoca todas las sesiones del usuario,
+    /// salvo dentro de un margen corto tras la rotación (carrera benigna entre pestañas).
     /// </summary>
-    public async Task<(AppUser User, string RawToken, RefreshToken Entity)?> RotateAsync(string rawToken, string? ip, CancellationToken ct)
+    public async Task<RotationResult> RotateAsync(string rawToken, string? ip, CancellationToken ct)
     {
         var now = clock.GetUtcNow();
         var hash = Hash(rawToken);
-        var existing = await db.RefreshTokens.Include(x => x.User).FirstOrDefaultAsync(x => x.TokenHash == hash, ct);
-        if (existing is null) return null;
+        var existing = await db.RefreshTokens.AsNoTracking().Include(x => x.User)
+            .FirstOrDefaultAsync(x => x.TokenHash == hash, ct);
+        if (existing is null) return new(RotationStatus.Invalid);
 
-        if (existing.RevokedAt is not null)
-        {
-            await RevokeAllAsync(existing.UserId, ct);
-            return null;
-        }
-        if (!existing.IsActive(now) || !existing.User.IsActive) return null;
+        if (existing.RevokedAt is not null) return await OnReusedAsync(existing, now, ct);
+        if (!existing.IsActive(now) || !existing.User.IsActive) return new(RotationStatus.Invalid);
 
         var (raw, replacement) = NewRefreshToken(existing.UserId, ip, now);
-        existing.RevokedAt = now;
-        existing.ReplacedById = replacement.Id;
+        var won = await db.RefreshTokens
+            .Where(x => x.Id == existing.Id && x.RevokedAt == null)
+            .ExecuteUpdateAsync(s => s.SetProperty(x => x.RevokedAt, now)
+                                      .SetProperty(x => x.ReplacedById, replacement.Id), ct);
+        if (won != 1)
+        {
+            // Otra petición lo rotó entre la lectura y el UPDATE: no se bifurca la sesión.
+            var current = await db.RefreshTokens.AsNoTracking().FirstAsync(x => x.Id == existing.Id, ct);
+            return await OnReusedAsync(current, now, ct);
+        }
+
         db.RefreshTokens.Add(replacement);
         await db.SaveChangesAsync(ct);
-        return (existing.User, raw, replacement);
+        return new(RotationStatus.Rotated, existing.User, raw, replacement);
+    }
+
+    private async Task<RotationResult> OnReusedAsync(RefreshToken token, DateTimeOffset now, CancellationToken ct)
+    {
+        var withinGrace = token.ReplacedById is not null && token.RevokedAt is { } revoked
+                          && now - revoked <= TimeSpan.FromSeconds(_auth.RefreshReuseGraceSeconds);
+        if (withinGrace) return new(RotationStatus.ConcurrentRotation);
+
+        await RevokeAllAsync(token.UserId, ct);
+        return new(RotationStatus.ReuseDetected);
     }
 
     public string CreateAccessToken(AppUser user, IList<string> roles, DateTimeOffset now, out DateTimeOffset expires)
     {
         expires = now.AddMinutes(_opt.AccessTokenMinutes);
+        // Sin correo ni otros datos personales: el token viaja en la URL de SignalR (?access_token=).
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new(JwtRegisteredClaimNames.Email, user.Email ?? ""),
             new(JwtRegisteredClaimNames.Name, user.FullName),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new("security_stamp", user.SecurityStamp ?? "")
         };
+        if (user.MustChangePassword) claims.Add(new Claim(PasswordChangeClaim, "1"));
         claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
 
         var creds = new SigningCredentials(SigningKey(_opt.Key), SecurityAlgorithms.HmacSha256);
@@ -75,12 +111,9 @@ public class TokenService(AppDbContext db, IOptions<JwtOptions> options, TimePro
     public async Task RevokeAsync(string rawToken, CancellationToken ct)
     {
         var hash = Hash(rawToken);
-        var token = await db.RefreshTokens.FirstOrDefaultAsync(x => x.TokenHash == hash, ct);
-        if (token is { RevokedAt: null })
-        {
-            token.RevokedAt = clock.GetUtcNow();
-            await db.SaveChangesAsync(ct);
-        }
+        var now = clock.GetUtcNow();
+        await db.RefreshTokens.Where(x => x.TokenHash == hash && x.RevokedAt == null)
+            .ExecuteUpdateAsync(s => s.SetProperty(x => x.RevokedAt, now), ct);
     }
 
     public async Task RevokeAllAsync(Guid userId, CancellationToken ct)

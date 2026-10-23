@@ -15,6 +15,8 @@ interface AuthState {
   loading: boolean
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
+  /** Cambia la contraseña; la API devuelve una sesión nueva (las demás se cierran). */
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>
   hasRole: (...roles: Role[]) => boolean
 }
 
@@ -53,9 +55,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [qc])
 
+  const changePassword = useCallback(async (currentPassword: string, newPassword: string) => {
+    const r = await api<AuthResponse>('/auth/change-password', {
+      method: 'POST',
+      body: { currentPassword, newPassword },
+    })
+    setAccessToken(r.accessToken)
+    setUser(r.user)
+  }, [])
+
   const hasRole = useCallback((...roles: Role[]) => !!user && roles.includes(user.role), [user])
 
-  const value = useMemo(() => ({ user, loading, login, logout, hasRole }), [user, loading, login, logout, hasRole])
+  const value = useMemo(
+    () => ({ user, loading, login, logout, changePassword, hasRole }),
+    [user, loading, login, logout, changePassword, hasRole],
+  )
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>
 }
 

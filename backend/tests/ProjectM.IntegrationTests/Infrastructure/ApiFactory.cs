@@ -36,9 +36,19 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("Seed:Demo", "false");
         builder.UseSetting("Auth:SecureCookies", "false");
         builder.UseSetting("Auth:LoginPermitLimitPerMinute", LoginPermitLimit.ToString());
+        // Valores neutros para no interferir con el resto de pruebas; las fábricas especializadas los cambian.
+        builder.UseSetting("Auth:LoginGlobalPermitLimitPerMinute", "100000");
+        builder.UseSetting("Auth:UserWritePermitLimitPerMinute", "100000");
+        builder.UseSetting("Auth:UploadPermitLimitPer10Minutes", "100000");
+        builder.UseSetting("Auth:RefreshReuseGraceSeconds", "0");
+        builder.UseSetting("Auth:ForcePasswordChange", "false");
         builder.UseSetting("Notifications:DueDateJob", "false");
         builder.UseSetting("Storage:AttachmentsPath", Path.Combine(Path.GetTempPath(), _dbName));
+        foreach (var (key, value) in Overrides()) builder.UseSetting(key, value);
     }
+
+    /// <summary>Configuración adicional de las fábricas especializadas (se aplica al final).</summary>
+    protected virtual IEnumerable<(string Key, string Value)> Overrides() => [];
 
     public Task InitializeAsync()
     {
@@ -90,6 +100,34 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 public class RateLimitedApiFactory : ApiFactory
 {
     protected override int LoginPermitLimit => 3;
+}
+
+/// <summary>Límite global de login bajo con el límite por IP alto (simula IPs rotadas o falsificadas).</summary>
+public class GlobalLoginLimitApiFactory : ApiFactory
+{
+    protected override IEnumerable<(string Key, string Value)> Overrides() =>
+        [("Auth:LoginGlobalPermitLimitPerMinute", "3")];
+}
+
+/// <summary>Límite bajo de escrituras y subidas por usuario.</summary>
+public class UserLimitsApiFactory : ApiFactory
+{
+    protected override IEnumerable<(string Key, string Value)> Overrides() =>
+        [("Auth:UserWritePermitLimitPerMinute", "2"), ("Auth:UploadPermitLimitPer10Minutes", "1")];
+}
+
+/// <summary>Configuración de producción para sesiones: cambio de contraseña obligatorio y margen de refresh.</summary>
+public class ProductionAuthApiFactory : ApiFactory
+{
+    protected override IEnumerable<(string Key, string Value)> Overrides() =>
+        [("Auth:ForcePasswordChange", "true"), ("Auth:RefreshReuseGraceSeconds", "30")];
+}
+
+/// <summary>Login solo a través del proxy del frontend (encabezado secreto).</summary>
+public class ProxySecretApiFactory : ApiFactory
+{
+    public const string Secret = "secreto-del-proxy-de-pruebas";
+    protected override IEnumerable<(string Key, string Value)> Overrides() => [("Proxy:SharedSecret", Secret)];
 }
 
 [CollectionDefinition(Name)]

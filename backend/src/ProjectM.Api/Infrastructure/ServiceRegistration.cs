@@ -18,6 +18,11 @@ namespace ProjectM.Api.Infrastructure;
 
 public static class ServiceRegistration
 {
+    /// <summary>Límite por usuario para escrituras costosas (tareas, comentarios, etiquetas, dashboard).</summary>
+    public const string UserWritesPolicy = "user-writes";
+    /// <summary>Límite por usuario para subidas de adjuntos.</summary>
+    public const string UploadsPolicy = "uploads";
+
     public static IServiceCollection AddAuthServices(this IServiceCollection services, IConfiguration config)
     {
         services.Configure<JwtOptions>(config.GetSection(JwtOptions.Section));
@@ -55,6 +60,7 @@ public static class ServiceRegistration
                     ValidAudience = jwt.Audience,
                     IssuerSigningKey = TokenService.SigningKey(jwt.Key),
                     ValidateIssuerSigningKey = true,
+                    ValidAlgorithms = [SecurityAlgorithms.HmacSha256],
                     ClockSkew = TimeSpan.FromSeconds(30),
                     NameClaimType = JwtRegisteredClaimNames.Name,
                     RoleClaimType = ClaimTypes.Role
@@ -115,6 +121,39 @@ public static class ServiceRegistration
                         }));
             PerIpPolicy(o, AuthEndpoints.LoginRateLimitPolicy, authOpt.LoginPermitLimitPerMinute);
             PerIpPolicy(o, AuthEndpoints.RefreshRateLimitPolicy, authOpt.RefreshPermitLimitPerMinute);
+
+            // Tope global del login (todas las IP juntas): la IP puede falsificarse con X-Forwarded-For cuando
+            // se llama a la API directamente, así que el límite por IP solo no basta contra "password spraying".
+            o.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(http =>
+                http.Request.Path.StartsWithSegments("/api/v1/auth/login")
+                    ? RateLimitPartition.GetFixedWindowLimiter("login-global", _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = authOpt.LoginGlobalPermitLimitPerMinute,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueLimit = 0
+                    })
+                    : RateLimitPartition.GetNoLimiter("sin-limite"));
+
+            // Por usuario autenticado (claim sub): escrituras que generan notificaciones o consultas costosas,
+            // y subidas de archivos (almacenamiento con costo).
+            static string UserKey(HttpContext http) =>
+                http.User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+                ?? http.Connection.RemoteIpAddress?.ToString() ?? "anonimo";
+            o.AddPolicy(UserWritesPolicy, http => RateLimitPartition.GetTokenBucketLimiter(UserKey(http),
+                _ => new TokenBucketRateLimiterOptions
+                {
+                    TokenLimit = authOpt.UserWritePermitLimitPerMinute,
+                    TokensPerPeriod = authOpt.UserWritePermitLimitPerMinute,
+                    ReplenishmentPeriod = TimeSpan.FromMinutes(1),
+                    QueueLimit = 0
+                }));
+            o.AddPolicy(UploadsPolicy, http => RateLimitPartition.GetFixedWindowLimiter(UserKey(http),
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = authOpt.UploadPermitLimitPer10Minutes,
+                    Window = TimeSpan.FromMinutes(10),
+                    QueueLimit = 0
+                }));
             o.OnRejected = async (ctx, ct) =>
             {
                 var pd = new ProblemDetails

@@ -35,7 +35,8 @@ public static class CollaborationEndpoints
     {
         var c = api.MapGroup("").WithTags("Comentarios");
         c.MapGet("/tasks/{taskId:guid}/comments", ListComments);
-        c.MapPost("/tasks/{taskId:guid}/comments", AddComment).Validate<SaveCommentRequest>();
+        c.MapPost("/tasks/{taskId:guid}/comments", AddComment).RequireRateLimiting(ServiceRegistration.UserWritesPolicy)
+            .Validate<SaveCommentRequest>();
         c.MapPut("/comments/{id:guid}", EditComment).Validate<SaveCommentRequest>();
         c.MapDelete("/comments/{id:guid}", DeleteComment);
 
