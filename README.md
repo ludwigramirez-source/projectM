@@ -11,7 +11,7 @@ Gestor de proyectos web estilo ClickUp para uso interno de un equipo (un solo te
 - **Modo oscuro** con switch (sigue al sistema la primera vez y recuerda la elección), **diseño responsive** para celular y tableta, y **app instalable (PWA)** — ver [docs/PWA.md](docs/PWA.md)
 
 Stack: ASP.NET Core 9 + EF Core + PostgreSQL 16, ASP.NET Identity + JWT, SignalR · React 19 + TypeScript + Vite + Tailwind v4 + dnd-kit · Docker Compose.
-Arquitectura, modelo de datos y endpoints: [PLAN.md](PLAN.md). Convenciones para desarrollo: [CLAUDE.md](CLAUDE.md).
+Documentación técnica completa (arquitectura, API, modelo de datos, despliegue y manual de usuario): [docs/README.md](docs/README.md). Plan original: [PLAN.md](PLAN.md). Convenciones para desarrollo: [CLAUDE.md](CLAUDE.md).
 
 ## Despliegue en la nube
 
