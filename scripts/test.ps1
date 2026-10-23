@@ -23,7 +23,7 @@ $dockerArgs = @(
   '-e', 'DOTNET_CLI_TELEMETRY_OPTOUT=1',
   '-e', 'DOTNET_NOLOGO=1',
   '-e', "TEST_SQL_CONNECTION=Host=db;Port=5432;Username=postgres;Password=$pg",
-  'mcr.microsoft.com/dotnet/sdk:9.0',
+  'mcr.microsoft.com/dotnet/sdk:10.0',
   'dotnet', 'test', '--logger', 'console;verbosity=minimal'
 )
 & docker @dockerArgs @Extra
