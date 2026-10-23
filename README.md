@@ -10,7 +10,7 @@ Gestor de proyectos web estilo ClickUp para uso interno de un equipo (un solo te
 - **Dashboard:** tareas por estado, vencidas, carga por persona y proyectos por estado
 - **Modo oscuro** con switch (sigue al sistema la primera vez y recuerda la elección), **diseño responsive** para celular y tableta, y **app instalable (PWA)** — ver [docs/PWA.md](docs/PWA.md)
 
-Stack: ASP.NET Core 9 + EF Core + PostgreSQL 16, ASP.NET Identity + JWT, SignalR · React 19 + TypeScript + Vite + Tailwind v4 + dnd-kit · Docker Compose.
+Stack: ASP.NET Core 10 + EF Core + PostgreSQL 16, ASP.NET Identity + JWT, SignalR · React 19 + TypeScript + Vite + Tailwind v4 + dnd-kit · Docker Compose.
 Documentación técnica completa (arquitectura, API, modelo de datos, despliegue y manual de usuario): [docs/README.md](docs/README.md). Plan original: [PLAN.md](PLAN.md). Convenciones para desarrollo: [CLAUDE.md](CLAUDE.md).
 
 ## Despliegue en la nube
@@ -74,7 +74,7 @@ Además existe el Admin definido en `SEED_ADMIN_EMAIL`. Los datos demo usan fech
 ## Desarrollo
 
 ```bash
-# Backend (en contenedor .NET 9 SDK)
+# Backend (en contenedor .NET 10 SDK)
 powershell -File scripts/dotnet.ps1 build
 powershell -File scripts/dotnet.ps1 ef migrations add <Nombre> --project src/ProjectM.Api --output-dir Infrastructure/Persistence/Migrations
 

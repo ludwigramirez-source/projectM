@@ -52,6 +52,30 @@ ProjectM tiene una base de seguridad sólida en los puntos donde suelen fallar l
 |:-:|:-:|:-:|:-:|:-:|
 | **0** | **1** | **10** | **24** | **35** |
 
+### Estado de remediación (actualizado 2026-10-23)
+
+Se corrigieron las 5 acciones urgentes (§7), además de varios hallazgos Bajos relacionados. Las pruebas pasan: 67 unitarias, 62 de integración y 104 de frontend. También se verificó el stack local y la conexión TLS contra Supabase.
+
+| ID | Estado | Qué se hizo | Evidencia |
+|---|---|---|---|
+| SEC-01 | ✅ Corregido | `.env.example` sin valores utilizables y `SEED_DEMO=false`. La API se niega a arrancar fuera de Development con los valores de ejemplo publicados. El Admin sembrado, los usuarios creados por un Admin y las contraseñas restablecidas deben cambiarse en el primer ingreso (`MustChangePassword`, claim `pwd_change`, 403 `CAMBIO_CONTRASENA_REQUERIDO`), con pantalla obligatoria en el SPA | `.env.example`; `Api/Infrastructure/Security.cs`; `Api/Features/Auth/AuthEndpoints.cs`; `frontend/src/features/auth/ChangePassword.tsx`; pruebas `StartupGuardTests`, `ForcedPasswordChangeTests` |
+| SEC-02 | 🟡 Mitigado | Tope global del login sin depender de la IP (`Auth:LoginGlobalPermitLimitPerMinute`). La API ya acepta `Proxy:SharedSecret` para que `/api/v1/auth/*` solo llegue por el proxy, **pero falta activarlo en Vercel y Render** (`docs/DEPLOY.md`, "Login solo a través de Vercel") | `Api/Infrastructure/ServiceRegistration.cs`; `Api/Infrastructure/Security.cs`; pruebas `GlobalLoginLimitTests`, `ProxySecretTests` |
+| SEC-03 | ✅ Corregido | Rotación atómica (`UPDATE … WHERE RevokedAt IS NULL`). Una carrera benigna entre pestañas responde 409 `REFRESH_EN_CURSO` y el cliente reintenta, sin revocar todas las sesiones | `Api/Infrastructure/Auth/TokenService.cs`; `frontend/src/api/client.ts`; pruebas `Refresh_concurrente_…`, `client.test.ts` |
+| SEC-04 | ✅ Corregido | Hash ficticio cuando el usuario no existe, y el mismo 401 genérico también para cuentas bloqueadas | `Api/Features/Auth/AuthEndpoints.cs`; prueba `Cuenta_se_bloquea_…_sin_revelar_que_existe` |
+| SEC-05 | ✅ Corregido | CSP estricta (`script-src 'self'`, sin inline: el tema pasó a `/theme-init.js`) y `Permissions-Policy` en Vercel y nginx. Se verificó en el navegador: sin violaciones en dashboard, Kanban, detalle de tarea, calendario, admin y SignalR | `frontend/vercel.json`; `frontend/security-headers.conf`; `frontend/public/theme-init.js` |
+| SEC-06 | ✅ Corregido | Los hosts remotos nunca bajan de `Require`. Para `*.supabase.com` se usa `VerifyFull` con la CA raíz oficial de Supabase incluida en la imagen (huella SHA-256 `80:70:25:AD…:CA:FA`, contrastada contra el certificado del pooler). Se probó contra el pooler real: con la CA valida, sin la CA rechaza | `Api/Infrastructure/Persistence/ConnectionStrings.cs`; `Api/certs/supabase-prod-ca-2021.crt`; `ConnectionStringTests` |
+| SEC-07 | ✅ Corregido | Límites por usuario: crear tareas, comentar, crear etiquetas y dashboard (`Auth:UserWritePermitLimitPerMinute`); subidas (`Auth:UploadPermitLimitPer10Minutes`) | `Api/Infrastructure/ServiceRegistration.cs`; prueba `UserLimitsTests` |
+| SEC-11 | ✅ Corregido | Migración a **.NET 10 LTS**: SDK y runtime 10.0, ASP.NET Core, EF Core e Identity 10.0.13, Npgsql 10.0.3, `KnownIPNetworks` | `backend/Directory.Build.props`; `*.csproj`; Dockerfiles; `scripts/*.ps1` |
+| SEC-35 | ✅ Corregido | `SignalR.Client` de pruebas a 10.0.13 (`dotnet list package --vulnerable`: limpio). nginx 1.28 (estable). Dependabot para NuGet, npm, Docker y Actions | `backend/tests/*.csproj`; `frontend/Dockerfile`; `.github/dependabot.yml` |
+| SEC-12 | 🟡 Parcial | El JWT ya no lleva el correo (viaja en la URL de SignalR). Falta confirmar si Render registra query strings | `Api/Infrastructure/Auth/TokenService.cs` |
+| SEC-16 | ✅ Corregido | `change-password` con límite por IP y bloqueo por intentos; devuelve una sesión nueva y cierra las demás | `Api/Features/Auth/AuthEndpoints.cs` |
+| SEC-18 | ✅ Corregido | Cabeceras de nginx en un snippet incluido en cada `location`; `server_tokens off` | `frontend/nginx.conf`; `frontend/security-headers.conf` |
+| SEC-20 | ✅ Corregido | El log del seed registra el Id, no el correo; la guía exige borrar `Seed__Admin*` tras el primer arranque | `Api/Infrastructure/Seed/IdentitySeeder.cs`; `docs/DEPLOY.md` |
+| SEC-32 | ✅ Corregido | `MaximumLength(128)` en las contraseñas del login y del cambio de contraseña | `Api/Features/Auth/AuthEndpoints.cs` |
+| SEC-34 | 🟡 Parcial | `ValidAlgorithms = [HS256]` y `.gitignore` con `.env.*`. Pendiente: CORS sin `AllowCredentials`, S3 solo https, DataProtection | `Api/Infrastructure/ServiceRegistration.cs`; `.gitignore` |
+
+Pendientes: SEC-08, 09, 10 (siguientes por prioridad), y el resto de los Bajos de la checklist (§6).
+
 ---
 
 ## 2. Tabla de hallazgos

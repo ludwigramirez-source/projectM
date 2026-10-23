@@ -18,7 +18,7 @@
 
 ## 1. Vista general
 
-ProjectM es una SPA React que consume una API REST versionada (`/api/v1`) y un hub SignalR (`/hubs/notifications`) servidos por una única aplicación ASP.NET Core 9 (`backend/src/ProjectM.Api/Program.cs`). La API persiste en PostgreSQL vía EF Core + Npgsql (`backend/src/ProjectM.Api/Program.cs`, `UseNpgsql`) y guarda los adjuntos en disco local o en un bucket S3 según `Storage:Provider` (`backend/src/ProjectM.Api/Program.cs`). Un servicio en segundo plano (`DueDateNotifier`) revisa vencimientos cada hora (`backend/src/ProjectM.Api/Infrastructure/Notifications/DueDateNotifier.cs`).
+ProjectM es una SPA React que consume una API REST versionada (`/api/v1`) y un hub SignalR (`/hubs/notifications`) servidos por una única aplicación ASP.NET Core 10 (`backend/src/ProjectM.Api/Program.cs`). La API persiste en PostgreSQL vía EF Core + Npgsql (`backend/src/ProjectM.Api/Program.cs`, `UseNpgsql`) y guarda los adjuntos en disco local o en un bucket S3 según `Storage:Provider` (`backend/src/ProjectM.Api/Program.cs`). Un servicio en segundo plano (`DueDateNotifier`) revisa vencimientos cada hora (`backend/src/ProjectM.Api/Infrastructure/Notifications/DueDateNotifier.cs`).
 
 Hay dos topologías de despliegue:
 
@@ -38,7 +38,7 @@ flowchart LR
         NGX["nginx (Docker)<br/>/api, /hubs, /health"]
     end
 
-    subgraph API["ProjectM.Api (ASP.NET Core 9)"]
+    subgraph API["ProjectM.Api (ASP.NET Core 10)"]
         REST["Minimal APIs<br/>/api/v1/*"]
         HUB["SignalR Hub<br/>/hubs/notifications"]
         HS["Hosted service<br/>DueDateNotifier (1 h)"]
@@ -84,7 +84,7 @@ Notas:
 | `backend/tests/ProjectM.UnitTests` | Pruebas de reglas puras | xUnit, FluentAssertions (`backend/tests/ProjectM.UnitTests/ProjectM.UnitTests.csproj`) |
 | `backend/tests/ProjectM.IntegrationTests` | Pruebas HTTP/SignalR contra PostgreSQL real | `Microsoft.AspNetCore.Mvc.Testing`, `Microsoft.AspNetCore.SignalR.Client` (`backend/tests/ProjectM.IntegrationTests/ProjectM.IntegrationTests.csproj`) |
 
-Configuración común: `net9.0`, `Nullable`, `ImplicitUsings`, `InvariantGlobalization=false` (`backend/Directory.Build.props`).
+Configuración común: `net10.0`, `Nullable`, `ImplicitUsings`, `InvariantGlobalization=false` (`backend/Directory.Build.props`).
 
 ### 2.2 Dominio (`ProjectM.Domain`)
 
@@ -418,7 +418,7 @@ El detalle de tarea se abre desde cualquier vista con `?task=<id>`: `useTaskDraw
 | Cabeceras HTTP (Docker) | `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`; `client_max_body_size 25m` | `frontend/nginx.conf` |
 | Cabeceras HTTP (Vercel) | Las mismas tres + `Strict-Transport-Security: max-age=31536000; includeSubDomains` | `frontend/vercel.json` |
 | Superficie expuesta | API publicada solo en `127.0.0.1:5010` en Compose; OpenAPI/Scalar solo en Development; `/health` anónimo | `docker-compose.yml`, `backend/src/ProjectM.Api/Program.cs` |
-| Contenedor | Runtime `aspnet:9.0` ejecutando como usuario `app` | `backend/src/ProjectM.Api/Dockerfile` |
+| Contenedor | Runtime `aspnet:10.0` ejecutando como usuario `app` | `backend/src/ProjectM.Api/Dockerfile` |
 | Secretos | `Jwt:Key` obligatorio (≥ 32); secretos en `.env` / panel de Render (`sync: false`, `generateValue`) | `Infrastructure/ServiceRegistration.cs`, `.env.example`, `render.yaml` |
 | Conexión a BD | URIs `postgres://` fuerzan `SslMode=Require` | `Infrastructure/Persistence/ConnectionStrings.cs` |
 

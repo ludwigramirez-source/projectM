@@ -84,7 +84,9 @@ Si un botón no aparece en tu pantalla, es probable que tu rol no lo permita.
 
 - Si te equivocas **5 veces seguidas**, tu cuenta se bloquea **15 minutos** por seguridad.
 - La sesión se mantiene aunque recargues la página. Para salir, abre el menú con tu nombre (arriba a la derecha) y elige **Cerrar sesión** (ver la sección 3).
-- **¿Olvidaste tu contraseña?** Pídele al administrador que la restablezca (sección 17.1). Hoy la aplicación no tiene una pantalla para cambiar tu propia contraseña. ⚠️ A CONFIRMAR: la función existe en el servidor (`POST /auth/change-password`), pero no se encontró en la interfaz.
+- **Primer ingreso:** si tu contraseña la asignó un administrador (cuenta nueva o restablecida), la app te pedirá **cambiarla** antes de continuar: escribe la actual, la nueva (mínimo 10 caracteres, con mayúscula, minúscula y número) y confírmala.
+- **Cambiar tu contraseña cuando quieras:** menú con tu nombre → **Cambiar contraseña**. Al hacerlo se cierran tus sesiones en otros dispositivos.
+- **¿Olvidaste tu contraseña?** Pídele al administrador que la restablezca (sección 17.1).
 
 *Fuente: frontend/src/features/auth/LoginPage.tsx; backend/src/ProjectM.Api/Infrastructure/ServiceRegistration.cs; docs/API.md*
 
@@ -103,7 +105,7 @@ Si un botón no aparece en tu pantalla, es probable que tu rol no lo permita.
 - **Barra superior (derecha):**
   - Interruptor **claro/oscuro** (☀/☾).
   - **Campana** de notificaciones, con el número de avisos sin leer.
-  - **Tu nombre**: menú con tu correo, tu rol, **Instalar app** y **Cerrar sesión**.
+  - **Tu nombre**: menú con tu correo, tu rol, **Instalar app**, **Cambiar contraseña** y **Cerrar sesión**.
 
 En el celular, la barra lateral se abre con el botón ☰.
 

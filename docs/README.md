@@ -33,10 +33,10 @@ Además, la aplicación:
 
 | Capa | Tecnología | Fuente |
 |---|---|---|
-| Lenguajes | C# (.NET 9), TypeScript 6 | (backend/src/ProjectM.Api/ProjectM.Api.csproj), (frontend/package.json) |
-| API | ASP.NET Core 9 Minimal APIs por feature, FluentValidation 12, ProblemDetails | (backend/src/ProjectM.Api/Program.cs) |
+| Lenguajes | C# (.NET 10), TypeScript 6 | (backend/src/ProjectM.Api/ProjectM.Api.csproj), (frontend/package.json) |
+| API | ASP.NET Core 10 Minimal APIs por feature, FluentValidation 12, ProblemDetails | (backend/src/ProjectM.Api/Program.cs) |
 | Autenticación | ASP.NET Identity + JWT Bearer, refresh token rotativo en cookie HttpOnly, rate limiting | (backend/src/ProjectM.Api/Infrastructure/ServiceRegistration.cs) |
-| Persistencia | EF Core 9 + Npgsql 9.0.4 sobre PostgreSQL (16 en local, Supabase en la nube) | (backend/src/ProjectM.Api/ProjectM.Api.csproj), (docker-compose.yml) |
+| Persistencia | EF Core 10 + Npgsql 10.0.3 sobre PostgreSQL (16 en local, Supabase en la nube) | (backend/src/ProjectM.Api/ProjectM.Api.csproj), (docker-compose.yml) |
 | Tiempo real | SignalR (`/hubs/notifications`) | (backend/src/ProjectM.Api/Program.cs) |
 | Archivos | `IFileStorage`: disco local o S3 (AWSSDK.S3 4.x, Supabase Storage) | (backend/src/ProjectM.Api/Infrastructure/Storage/FileStorage.cs), (backend/src/ProjectM.Api/Infrastructure/Storage/S3FileStorage.cs) |
 | Tareas en segundo plano | `DueDateNotifier` (hosted service horario) | (backend/src/ProjectM.Api/Program.cs) |
@@ -45,7 +45,7 @@ Además, la aplicación:
 | Pruebas | xUnit + FluentAssertions + WebApplicationFactory; Vitest + Testing Library | (backend/tests/*/*.csproj), (frontend/package.json) |
 | Lint / formato | oxlint, Prettier | (frontend/package.json) |
 | Gestores de paquetes | NuGet (vía contenedor SDK), npm | (scripts/dotnet.ps1), (frontend/package-lock.json) |
-| Contenedores | Docker Compose (`db`, `api`, `web`, `tests`), nginx 1.27 | (docker-compose.yml), (frontend/Dockerfile) |
+| Contenedores | Docker Compose (`db`, `api`, `web`, `tests`), nginx 1.28 | (docker-compose.yml), (frontend/Dockerfile) |
 | Nube (rama `vercel`) | Vercel (SPA), Render (API Docker), Supabase (Postgres + Storage) | (frontend/vercel.json), (render.yaml) |
 
 No hay colas de mensajes ni caché distribuida. Los eventos de dominio se despachan en proceso, dentro del guardado de EF (backend/src/ProjectM.Api/Infrastructure/Events).
@@ -85,7 +85,7 @@ flowchart TB
     NG["nginx (Docker Compose)"]
     VC["Vercel (rewrite /api)"]
   end
-  subgraph API["ProjectM.Api (ASP.NET Core 9)"]
+  subgraph API["ProjectM.Api (ASP.NET Core 10)"]
     MW["Middleware: ForwardedHeaders → ExceptionHandler → CORS → AuthN → RateLimiter → AuthZ"]
     FE["Features (Minimal APIs)<br/>Auth · Users · Spaces · Projects · Closure · Templates · Tasks · Collaboration · Dashboard"]
     GU["ProjectGuard / ProjectRules<br/>(autorización por proyecto)"]

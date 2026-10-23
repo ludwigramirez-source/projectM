@@ -13,7 +13,7 @@ Cómo levantar ProjectM en una máquina de desarrollo, qué variables de entorno
 | Node.js (la imagen usa `node:24-alpine`; el README pide 22+) | Desarrollar y probar el frontend fuera de Docker | (frontend/Dockerfile), (README.md) |
 | Git | Clonar el repositorio | — |
 
-**No se necesita el SDK de .NET instalado.** `scripts/dotnet.ps1` ejecuta `dotnet` dentro de `mcr.microsoft.com/dotnet/sdk:9.0`, con la caché de NuGet en el volumen `projectm-nuget` y las herramientas (dotnet-ef) en `projectm-dotnet-tools` (scripts/dotnet.ps1).
+**No se necesita el SDK de .NET instalado.** `scripts/dotnet.ps1` ejecuta `dotnet` dentro de `mcr.microsoft.com/dotnet/sdk:10.0`, con la caché de NuGet en el volumen `projectm-nuget` y las herramientas (dotnet-ef) en `projectm-dotnet-tools` (scripts/dotnet.ps1).
 
 ## 2. Instalación paso a paso
 
@@ -64,7 +64,8 @@ Fuentes: (.env.example), (docker-compose.yml), (backend/src/ProjectM.Api/Infrast
 
 | Clave (variable de entorno) | Valor por defecto | Propósito | Dónde se lee |
 |---|---|---|---|
-| `ConnectionStrings__Default` | vacío | Cadena de PostgreSQL. Acepta el formato clave=valor de Npgsql o una URI `postgresql://…`; las URIs se convierten y exigen SSL | (Program.cs), (Infrastructure/Persistence/ConnectionStrings.cs) |
+| `ConnectionStrings__Default` | vacío | Cadena de PostgreSQL (formato clave=valor de Npgsql o URI `postgresql://…`). Hosts remotos: nunca menos que `SSL Mode=Require`; con CA disponible, `VerifyFull` (la de Supabase va incluida en la imagen para `*.supabase.com`) | (Program.cs), (Infrastructure/Persistence/ConnectionStrings.cs) |
+| `Database__RootCertificate` | — | Ruta a la CA raíz para validar el TLS de un PostgreSQL que no sea Supabase (activa `VerifyFull`) | (Infrastructure/Persistence/ConnectionStrings.cs) |
 | `Jwt__Key` | vacío | Clave de firma de los JWT (≥ 32 caracteres) | (Infrastructure/Auth/JwtOptions.cs), (Infrastructure/ServiceRegistration.cs) |
 | `Jwt__Issuer` / `Jwt__Audience` | `ProjectM` / `ProjectM.Web` | Emisor y audiencia del token | (Infrastructure/Auth/JwtOptions.cs) |
 | `Jwt__AccessTokenMinutes` | 15 | Vida del access token | (Infrastructure/Auth/JwtOptions.cs) |
@@ -72,6 +73,11 @@ Fuentes: (.env.example), (docker-compose.yml), (backend/src/ProjectM.Api/Infrast
 | `Auth__SecureCookies` | `true` | Cookie de refresh solo por HTTPS (localhost funciona) | (Infrastructure/Auth/JwtOptions.cs) |
 | `Auth__LoginPermitLimitPerMinute` | 10 | Intentos de login por IP y minuto | (Infrastructure/Auth/JwtOptions.cs) |
 | `Auth__RefreshPermitLimitPerMinute` | 120 | Renovaciones de sesión por IP y minuto | (Infrastructure/Auth/JwtOptions.cs) |
+| `Auth__LoginGlobalPermitLimitPerMinute` | 60 | Intentos de login por minuto sumando todas las IP (contra IPs rotadas o falsificadas) | (Infrastructure/Auth/JwtOptions.cs) |
+| `Auth__UserWritePermitLimitPerMinute` | 60 | Por usuario: crear tareas, comentar, crear etiquetas y consultar el dashboard | (Infrastructure/Auth/JwtOptions.cs) |
+| `Auth__UploadPermitLimitPer10Minutes` | 30 | Subidas de adjuntos por usuario cada 10 minutos | (Infrastructure/Auth/JwtOptions.cs) |
+| `Auth__RefreshReuseGraceSeconds` | 10 | Margen en que reusar un refresh recién rotado se trata como carrera entre pestañas (409) y no como robo | (Infrastructure/Auth/JwtOptions.cs) |
+| `Auth__ForcePasswordChange` | `true` | Obliga a cambiar la contraseña asignada por otra persona (Admin sembrado, usuarios creados o restablecidos por un Admin) | (Infrastructure/Auth/JwtOptions.cs), (Infrastructure/Security.cs) |
 | `Cors__AllowedOrigins` | vacío | Orígenes permitidos (CSV); con credenciales | (Program.cs) |
 | `Database__MigrateOnStartup` | `false` | Aplica las migraciones de EF al arrancar | (Program.cs), (appsettings.json) |
 | `Seed__AdminEmail` / `Seed__AdminPassword` | vacío | Admin inicial; si faltan, solo se registra una advertencia | (Infrastructure/Seed/IdentitySeeder.cs) |
@@ -86,7 +92,8 @@ Fuentes: (.env.example), (docker-compose.yml), (backend/src/ProjectM.Api/Infrast
 | `Storage__S3__AccessKeyId` / `Storage__S3__SecretAccessKey` | vacío | Credenciales S3 (secretas) | (Infrastructure/Storage/S3FileStorage.cs) |
 | `Notifications__DueDateJob` | `true` | Activa el servicio horario de avisos de vencimiento | (Program.cs) |
 | `Proxy__ForwardLimit` | 1 | Proxies confiables delante de la API (1 = nginx, 2 = Vercel + Render) | (Program.cs) |
-| `PORT` | — | Solo en Render: le indica a Render a qué puerto enrutar. La API no lo lee; escucha en 8080, el puerto por defecto de la imagen `aspnet:9.0` (`EXPOSE 8080`) | (render.yaml), (backend/src/ProjectM.Api/Dockerfile) |
+| `Proxy__SharedSecret` | — | Si se define, `/api/v1/auth/*` solo se acepta con el encabezado `X-Proxy-Secret` que inyecta el proxy del frontend (ver DEPLOY.md) | (Infrastructure/Security.cs) |
+| `PORT` | — | Solo en Render: le indica a Render a qué puerto enrutar. La API no lo lee; escucha en 8080, el puerto por defecto de la imagen `aspnet:10.0` (`EXPOSE 8080`) | (render.yaml), (backend/src/ProjectM.Api/Dockerfile) |
 
 Las rutas de esta tabla son relativas a `backend/src/ProjectM.Api/`.
 

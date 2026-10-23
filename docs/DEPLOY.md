@@ -230,7 +230,7 @@ Sin este paso el login funciona (va por el proxy de Vercel), pero **fallan las n
 
 ## Paso 5. Verificar
 
-1. Abre **URL_WEB** → inicia sesión con `Seed__AdminEmail` / `Seed__AdminPassword`.
+1. Abre **URL_WEB** → inicia sesión con `Seed__AdminEmail` / `Seed__AdminPassword`. La app te pedirá **cambiar la contraseña** antes de continuar (la inicial vive en una variable de entorno). Los usuarios que crees o a quienes restablezcas la contraseña también deberán cambiarla en su primer ingreso.
 2. Recarga la página (F5): la sesión debe mantenerse.
 3. Crea un espacio y un proyecto con la plantilla "Proyecto estándar"; abre una tarea y **adjunta un archivo**.
    - En Supabase → Storage → `attachments` debe aparecer el archivo.
@@ -239,7 +239,18 @@ Sin este paso el login funciona (va por el proxy de Vercel), pero **fallan las n
 5. **Instalar como app**:
    - **Android/escritorio**: menú de usuario → **Instalar app**.
    - **iPhone**: Safari → Compartir → **Agregar a pantalla de inicio**.
-6. Cambia la contraseña del Admin si usaste una temporal, crea los usuarios del equipo desde **Administración → Usuarios** y, si quieres, borra `Seed__AdminPassword` de Render (el Admin ya existe y no se vuelve a crear).
+6. Crea los usuarios del equipo desde **Administración → Usuarios** y **borra `Seed__AdminEmail` y `Seed__AdminPassword` de Render** (el Admin ya existe y no se vuelve a crear; así esa contraseña inicial no queda guardada en la plataforma).
+
+### Endurecimiento opcional: login solo a través de Vercel
+
+La API de Render es pública (la usan SignalR y los adjuntos). Para que `/api/v1/auth/*` (login, refresh, cambio de contraseña) solo se acepte cuando llega por el proxy de Vercel —y no pueda atacarse llamando directo a Render con una IP falsificada—, la API valida un encabezado secreto si se configura `Proxy__SharedSecret`:
+
+1. Genera un valor aleatorio largo (`openssl rand -base64 48`).
+2. **Vercel** → Settings → Environment Variables → `PROXY_SHARED_SECRET` = ese valor (Production y Preview).
+3. Cambia `frontend/vercel.json` para que el proxy inyecte el encabezado. Requiere el formato `routes` con un *transform* (`"type": "request.headers", "op": "set", "target": { "key": "x-proxy-secret" }, "args": "$PROXY_SHARED_SECRET", "env": ["PROXY_SHARED_SECRET"]`) en la ruta `/api/(.*)`; `routes` no se combina con `rewrites`/`headers`, así que todo `vercel.json` debe migrarse. **Pruébalo primero en un deploy Preview.**
+4. Solo cuando el login por Vercel funcione con el encabezado: **Render** → `Proxy__SharedSecret` = el mismo valor. Desde ese momento, un login directo a Render responde 403.
+
+Aunque no se active, el login ya tiene un tope global por minuto (`Auth__LoginGlobalPermitLimitPerMinute`) y bloqueo por cuenta tras 5 intentos.
 
 ### Datos de demostración (opcional)
 

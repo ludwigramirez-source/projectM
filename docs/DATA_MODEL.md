@@ -1,6 +1,6 @@
 # Modelo de datos — ProjectM
 
-Documento derivado **exclusivamente del código fuente** de la rama `vercel` (EF Core 9 + PostgreSQL vía Npgsql). Cada afirmación cita entre paréntesis el archivo de origen. Lo que no se puede confirmar desde el código se marca con **⚠️ A CONFIRMAR**.
+Documento derivado **exclusivamente del código fuente** de la rama `vercel` (EF Core 10 + PostgreSQL vía Npgsql). Cada afirmación cita entre paréntesis el archivo de origen. Lo que no se puede confirmar desde el código se marca con **⚠️ A CONFIRMAR**.
 
 Rutas abreviadas usadas en las citas:
 

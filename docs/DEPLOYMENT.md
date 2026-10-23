@@ -6,8 +6,8 @@ Cómo se construye ProjectM y en qué infraestructura corre. Hay dos topologías
 
 | Pieza | Cómo se construye | Resultado | Fuente |
 |---|---|---|---|
-| API | Dockerfile multi-etapa: `sdk:9.0` hace `dotnet restore` y `dotnet publish -c Release`; luego se copia a `aspnet:9.0` | Imagen que corre como usuario `app`, expone 8080 y tiene `/data/attachments` creado | (backend/src/ProjectM.Api/Dockerfile) |
-| Web (Compose) | `node:24-alpine` ejecuta `npm ci` y `npm run build` (`tsc -b && vite build`); `dist/` se copia a `nginx:1.27-alpine` con `nginx.conf` | Imagen nginx que sirve el SPA y hace de proxy | (frontend/Dockerfile), (frontend/package.json) |
+| API | Dockerfile multi-etapa: `sdk:10.0` hace `dotnet restore` y `dotnet publish -c Release`; luego se copia a `aspnet:10.0` | Imagen que corre como usuario `app`, expone 8080 y tiene `/data/attachments` creado | (backend/src/ProjectM.Api/Dockerfile) |
+| Web (Compose) | `node:24-alpine` ejecuta `npm ci` y `npm run build` (`tsc -b && vite build`); `dist/` se copia a `nginx:1.28-alpine` con `nginx.conf` | Imagen nginx que sirve el SPA y hace de proxy | (frontend/Dockerfile), (frontend/package.json) |
 | Web (Vercel) | Vercel ejecuta `npm run build` con framework `vite` y publica `dist/` | Sitio estático con rewrites y headers | (frontend/vercel.json) |
 | Pruebas | `tests.Dockerfile` (perfil `test`) | Contenedor que ejecuta `dotnet test` | (backend/tests.Dockerfile), (docker-compose.yml) |
 
@@ -17,8 +17,8 @@ El build de Vite genera además el service worker y el manifest de la PWA (vite-
 
 ```mermaid
 flowchart LR
-  U[Navegador / PWA] -->|":8080 (WEB_PORT)"| W["web<br/>nginx 1.27<br/>SPA + proxy"]
-  W -->|"/api/*  /health"| A["api<br/>ASP.NET Core 9<br/>:8080"]
+  U[Navegador / PWA] -->|":8080 (WEB_PORT)"| W["web<br/>nginx 1.28<br/>SPA + proxy"]
+  W -->|"/api/*  /health"| A["api<br/>ASP.NET Core 10<br/>:8080"]
   W -->|"/hubs/* (WebSocket)"| A
   A -->|Npgsql| D[("db<br/>postgres:16-alpine")]
   A --> V[("volumen<br/>attachments")]

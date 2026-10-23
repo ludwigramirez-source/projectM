@@ -3,7 +3,7 @@
 Gestor de proyectos estilo ClickUp (MVP, un solo tenant, UI en español). Plan completo y decisiones de arquitectura: [PLAN.md](PLAN.md).
 
 ## Stack
-- Backend: ASP.NET Core 9 (Minimal APIs por feature), EF Core 9 + PostgreSQL (Npgsql; Supabase en producción), Identity + JWT, SignalR.
+- Backend: ASP.NET Core 10 (Minimal APIs por feature), EF Core 10 + PostgreSQL (Npgsql; Supabase en producción), Identity + JWT, SignalR.
 - **Rama `vercel`**: despliegue Vercel (frontend) + Render (API Docker, `render.yaml`) + Supabase (Postgres + Storage S3). `main` conserva SQL Server. Guía: `docs/DEPLOY.md`.
 - Frontend: React 19 + TypeScript + Vite 8 + Tailwind v4 + dnd-kit + TanStack Query.
 - Despliegue: Docker Compose (`db`, `api`, `web` con nginx que hace proxy de `/api` y `/hubs`).
@@ -53,8 +53,11 @@ docker compose up -d --build      # web en http://localhost:8080, API en 127.0.0
 - Entidades con `Id` generado en cliente (`Guid.NewGuid()`, `ValueGeneratedNever`).
 - Build/test del backend 100 % en Docker (decisión del usuario, sin SDK local).
 - Adjuntos en disco (`/data/attachments`, volumen Docker) detrás de `IFileStorage`.
-- Rate limiting por IP: login 10/min (`Auth:LoginPermitLimitPerMinute`) y refresh 120/min (`Auth:RefreshPermitLimitPerMinute`); el cliente reintenta el refresh ante 429 en vez de cerrar la sesión.
-- Refresh token rotativo en cookie HttpOnly `SameSite=Strict` con path `/api/v1/auth`; access token solo en memoria del SPA.
+- Rate limiting por IP: login 10/min (`Auth:LoginPermitLimitPerMinute`) y refresh 120/min (`Auth:RefreshPermitLimitPerMinute`); el cliente reintenta el refresh ante 429 en vez de cerrar la sesión. Además: tope global del login (`Auth:LoginGlobalPermitLimitPerMinute`, la IP puede falsificarse) y límites por usuario (`ServiceRegistration.UserWritesPolicy` / `UploadsPolicy`) en crear tareas, comentar, etiquetas, dashboard y subidas; endpoints nuevos costosos o que notifican deben usar `.RequireRateLimiting(...)`.
+- Refresh token rotativo en cookie HttpOnly `SameSite=Strict` con path `/api/v1/auth`; access token solo en memoria del SPA. Rotación atómica (UPDATE condicional); reusar un token recién rotado (< `Auth:RefreshReuseGraceSeconds`) responde 409 `REFRESH_EN_CURSO` y el cliente reintenta; fuera del margen revoca todas las sesiones.
+- Seguridad (ver `docs/SECURITY_AUDIT.md`): login con respuesta uniforme (sin 423, hash ficticio); contraseña asignada por otro ⇒ `MustChangePassword` + claim `pwd_change` ⇒ 403 `CAMBIO_CONTRASENA_REQUERIDO` fuera de `/api/v1/auth` (`Infrastructure/Security.cs`), pantalla `ForcedPasswordChange` en el SPA; `StartupGuard` impide arrancar con valores de `.env.example`; JWT sin correo (viaja en la URL de SignalR); `Proxy:SharedSecret` opcional para aceptar `/auth/*` solo vía el proxy.
+- CSP estricta sin scripts inline (`frontend/security-headers.conf` en nginx, `vercel.json` en Vercel; el tema inicial va en `public/theme-init.js`). No agregar `<script>` inline ni orígenes externos sin actualizar ambas CSP.
+- PostgreSQL remoto: nunca menos que `SSL Mode=Require`; `*.supabase.com` usa `VerifyFull` con la CA incluida (`Api/certs/supabase-prod-ca-2021.crt`); otro proveedor: `Database:RootCertificate`.
 - Tareas: `PUT /tasks/{id}` reemplaza los campos básicos (con `rowVersion`); estado y movimiento van por `PATCH .../status` y `PATCH .../move` (orden fraccional con rebalanceo).
 - Campos personalizados obligatorios: no bloquean el alta rápida; se exigen al completar la tarea (`CAMPOS_REQUERIDOS`) y no pueden vaciarse.
 - El detalle de tarea se abre desde cualquier pantalla con `?task=<id>` (`TaskDrawer` montado en `MainLayout`).
